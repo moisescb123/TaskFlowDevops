@@ -57,7 +57,7 @@ Represents a work item on the project board.
 | `title` | string | Required (RN02) |
 | `status` | enum | `todo`, `in_progress`, `done` |
 | `priority` | enum | `high`, `medium`, `low` (RN02 / US10); shown on board cards as a color badge |
-| `due_date` | date | Required (RN02) |
+| `due_date` | date | Required (RN02 / US11); ISO `YYYY-MM-DD`; shown on board cards |
 | `assignee_id` | FK → User | Optional at model level but business flows assign a single primary responsible (RN01) |
 | `created_by_id` | FK → User | Developer who created the task |
 | `created_at` | datetime | Set on create |

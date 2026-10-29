@@ -1,5 +1,5 @@
 /**
- * Kanban board (US04–US10): CRUD, assignee, status transitions, priority badge.
+ * Kanban board (US04–US11): CRUD, assignee, status, priority badge, due date.
  */
 (function () {
   const root = document.getElementById("board-root");
@@ -103,7 +103,9 @@
           aria-label="Priority: ${escapeHtml(priorityLabel(priority))}"
         >${escapeHtml(priorityLabel(priority))}</span>
       </p>
-      <p class="task-meta">Due ${escapeHtml(task.due_date)}</p>
+      <p class="task-meta task-due-date" data-due-date="${escapeHtml(task.due_date || "")}">
+        Due ${escapeHtml(task.due_date)}
+      </p>
       <p class="task-meta">${escapeHtml(assignee)}</p>
       ${mutateBlock}
     </article>`;

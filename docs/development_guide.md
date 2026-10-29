@@ -58,15 +58,15 @@ Post-login redirects: Admin → `/admin/users`; Developer/Viewer → `/board`.
 - Login UI: `/login`
 - Logout control: shared header button on `/board` and `/admin/users`
 
-### Task board (US04–US10)
+### Task board (US04–US11)
 
 - `GET /api/tasks` — authenticated list of tasks
 - `POST /api/tasks` — Developer-only create `{ "title", "priority", "due_date", "assignee_id?" }` → `201` To Do task (RN02); Admin/Viewer `403`
 - `GET /api/tasks/{taskId}` — authenticated task detail
-- `PUT /api/tasks/{taskId}` — Developer-only update title/priority/due_date/assignee (US06/US08/US10, RN01/RN02); Admin/Viewer `403`
+- `PUT /api/tasks/{taskId}` — Developer-only update title/priority/due_date/assignee (US06/US08/US10/US11, RN01/RN02); Admin/Viewer `403`
 - `DELETE /api/tasks/{taskId}` — Developer-only hard delete → `204`; Admin/Viewer `403`; missing id `404`
 - `PATCH /api/tasks/{taskId}/status` — Developer-only `{ "status" }` with RN04 (no `todo` → `done`); Admin/Viewer `403`
-- Board UI: `/board` with Create/Edit/Delete, Start/Complete/Reopen, and color priority badges (`high`/`medium`/`low`, US10)
+- Board UI: `/board` with Create/Edit/Delete, Start/Complete/Reopen, priority badges (US10), and due dates (`YYYY-MM-DD`, US11)
 - Viewer: read-only (`data-can-mutate=false`); mutating task APIs return `403`
 - Tasks persist in SQLite `tasks` table across restarts; deleted rows do not return after restart; at most one `assignee_id` (RN01)
 
