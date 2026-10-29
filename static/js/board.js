@@ -1,5 +1,5 @@
 /**
- * Kanban board (US04–US09): CRUD, assignee picker, status transitions (RN04).
+ * Kanban board (US04–US10): CRUD, assignee, status transitions, priority badge.
  */
 (function () {
   const root = document.getElementById("board-root");
@@ -53,6 +53,11 @@
     return `priority-${escapeHtml(priority || "medium")}`;
   }
 
+  function priorityLabel(priority) {
+    const value = priority || "medium";
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  }
+
   function statusMoveButtons(task) {
     if (!canCreate) {
       return "";
@@ -81,6 +86,7 @@
     const assignee =
       task.assignee_name ||
       (task.assignee_id != null ? `User #${task.assignee_id}` : "Unassigned");
+    const priority = task.priority || "medium";
     const mutateBlock = canCreate
       ? `<div class="card-actions">
           ${statusMoveButtons(task)}
@@ -90,9 +96,13 @@
       : "";
     return `<article class="task-card" data-task-id="${task.id}">
       <h3 class="task-title">${escapeHtml(task.title)}</h3>
-      <p class="task-meta"><span class="${priorityClass(task.priority)}">${escapeHtml(
-        task.priority
-      )}</span></p>
+      <p class="task-meta">
+        <span
+          class="priority-badge ${priorityClass(priority)}"
+          data-priority="${escapeHtml(priority)}"
+          aria-label="Priority: ${escapeHtml(priorityLabel(priority))}"
+        >${escapeHtml(priorityLabel(priority))}</span>
+      </p>
       <p class="task-meta">Due ${escapeHtml(task.due_date)}</p>
       <p class="task-meta">${escapeHtml(assignee)}</p>
       ${mutateBlock}

@@ -232,9 +232,17 @@ button {
   font-size: 0.85rem;
   color: var(--muted);
 }
-.priority-high { color: var(--danger); font-weight: 700; text-transform: capitalize; }
-.priority-medium { color: #9a6700; font-weight: 700; text-transform: capitalize; }
-.priority-low { color: var(--accent); font-weight: 700; text-transform: capitalize; }
+.priority-badge {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+.priority-high { color: var(--danger); font-weight: 700; }
+.priority-medium { color: #9a6700; font-weight: 700; }
+.priority-low { color: var(--accent); font-weight: 700; }
 .card-actions {
   margin-top: 0.5rem;
   font-size: 0.8rem;
