@@ -129,7 +129,7 @@ paths:
     post:
       tags: [Tasks]
       summary: Create task
-      description: Developer creates a task in To Do (US05/US10, RN02). Priority must be high, medium, or low. Admin and Viewer forbidden.
+      description: Developer creates a task in To Do (US05/US10/US11, RN02). Priority high/medium/low; due_date YYYY-MM-DD required. Admin and Viewer forbidden.
       requestBody:
         required: true
         content:
@@ -168,7 +168,7 @@ paths:
     put:
       tags: [Tasks]
       summary: Update task
-      description: Developer edits title, priority, due date, and single assignee (US06/US08/US10, RN01). Priority enum high/medium/low. Status changes use PATCH status (US09).
+      description: Developer edits title, priority, due date, and single assignee (US06/US08/US10/US11, RN01). Priority enum; due_date YYYY-MM-DD. Status changes use PATCH status (US09).
       requestBody:
         required: true
         content:
