@@ -12,8 +12,9 @@ See proposal.md and `US/us05.md`. Stack: Flask, SQLite, board UI.
 ## Decisions
 
 1. Follow `docs/api-spec.yml` and `docs/data-model.md` enums/fields.
-2. Enforce authz: Developer mutate; Viewer 403.
+2. Enforce authz for create: Developer only (`developer_required_api`); Admin and Viewer 403.
 3. Prefer TDD Pytest before UI wiring.
+4. Create form disables submit while the POST is in flight to prevent duplicate tasks.
 
 ## Risks / Trade-offs
 

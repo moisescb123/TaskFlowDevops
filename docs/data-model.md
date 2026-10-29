@@ -74,9 +74,11 @@ Represents a work item on the project board.
 - At most one primary assignee (`assignee_id`)
 - Assignee must reference an existing User
 
-**Board (US04)**
+**Board (US04 / US05)**
 
 - Authenticated users load tasks via `GET /api/tasks`; the UI groups by `status`
+- Developers create tasks via `POST /api/tasks` (required title, priority, due date; optional assignee); Admin and Viewer cannot create
+- New tasks start in `todo` and appear in the To Do column
 - Viewers may not call mutating task endpoints (`403`)
 
 ## Non-persisted Concepts
