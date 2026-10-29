@@ -139,3 +139,33 @@ def create_task(
     if task is None:
         raise RuntimeError("Failed to load created task")
     return task
+
+
+def update_task(
+    *,
+    task_id: int,
+    title: str,
+    priority: str,
+    due_date: str,
+    assignee_id: int | None,
+) -> Task | None:
+    if priority not in VALID_PRIORITIES:
+        raise ValueError(f"Invalid priority: {priority}")
+    db = get_db()
+    cursor = db.execute(
+        """
+        UPDATE tasks
+        SET
+            title = ?,
+            priority = ?,
+            due_date = ?,
+            assignee_id = ?,
+            updated_at = datetime('now')
+        WHERE id = ?
+        """,
+        (title.strip(), priority, due_date, assignee_id, task_id),
+    )
+    db.commit()
+    if cursor.rowcount == 0:
+        return None
+    return get_task_by_id(task_id)
