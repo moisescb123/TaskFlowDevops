@@ -50,6 +50,13 @@ def me():
     return jsonify(user.to_public_dict()), 200
 
 
+@bp.post("/logout")
+@login_required_api
+def logout():
+    clear_session()
+    return ("", 204)
+
+
 @bp.get("/protected-stub")
 @login_required_api
 def protected_stub():

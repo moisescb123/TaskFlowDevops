@@ -77,7 +77,7 @@ Represents a work item on the project board.
 ## Non-persisted Concepts
 
 - **Board**: derived view grouping tasks by `status` columns.
-- **Session**: authentication session linking the current user to a role for authorization checks.
+- **Session**: authentication session linking the current user to a role for authorization checks (Flask client-signed cookie). Logout (`POST /api/auth/logout`, US02) clears session data and expires the cookie so that client needs a new login; stolen cookie replay without a denylist is out of scope.
 
 ## Alignment
 

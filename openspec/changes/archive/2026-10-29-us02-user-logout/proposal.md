@@ -6,14 +6,14 @@ Authenticated sessions from US01 must be terminable so users can protect access 
 
 ## What Changes
 
-- Add logout that invalidates the server session and clears the session cookie.
+- Add logout that clears Flask session data and expires the session cookie.
 - Redirect to login after logout; protected resources require a new login.
 - Expose logout for Admin, Developer, and Viewer.
-- Pytest coverage for logout success and unauthenticated logout.
+- Pytest coverage for logout success, cookie expiry, and unauthenticated logout.
 
 ## Non-goals
 
-- Login (US01), registration (US03), idle timeout, logout-all-devices.
+- Login (US01), registration (US03), idle timeout, logout-all-devices, server-side session denylist / cryptographic revocation of stolen cookies.
 
 ## Capabilities
 

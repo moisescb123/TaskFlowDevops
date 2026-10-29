@@ -50,11 +50,13 @@ Created by `python scripts/seed_users.py` when those emails are missing (bootstr
 
 Post-login redirects: Admin → `/admin/users`; Developer/Viewer → `/board`.
 
-### Auth API (US01)
+### Auth API (US01 / US02)
 
 - `POST /api/auth/login` — `{ "email", "password" }`
+- `POST /api/auth/logout` — clear session data and expire the session cookie → `204` (or `401` if not authenticated). Uses Flask client-signed cookies (no server denylist).
 - `GET /api/auth/me` — current session user
 - Login UI: `/login`
+- Logout control: shared header button on `/board` and `/admin/users`
 
 ### User management API (US03)
 
