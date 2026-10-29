@@ -1,0 +1,38 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Python, Flask, SQLite, HTML, CSS, JavaScript, Pytest, Git, GitHub, GitHub Actions
+  Architecture: Lightweight layered web app (presentation, business logic, data access) with CI/CD automation
+  We use conventional commits
+  Domain: TaskFlow DevOps — academic web task board used as a vehicle to practice DevOps (CI, automated tests, CD, branch protection)
+  Roles: Admin (user/role configuration), Developer (task CRUD), Viewer (read-only board)
+  Task states: To Do, In progress, Done (must pass through In progress before Done)
+  Priorities: High, Medium, Low
+  Business rules: single assignee (RN01); title, due date and priority required (RN02); main branch protected by automated tests before merge/deploy (RN03); no To Do → Done skip (RN04)
+  User stories live in US/us01.md … US/us15.md (Como… quiero… para…)
+  Academic references: Avance_Proyecto_Grupo_1_corregido.md, Propuesta_TaskFlow_DevOps_Sin_Espacios_Blancos.pdf
+  All code, comments, documentation, and technical artifacts must be in English
+
+  Project specs (single source of truth): All artifact creation and implementation MUST follow the project's technical context in docs/ and ai-specs/. Read and apply these when creating or implementing:
+  - docs/base-standards.md — core principles, TDD, language standards, links to backend/frontend/docs standards
+  - docs/backend-standards.md — Flask API, SQLite, Pytest, security (backend changes)
+  - docs/frontend-standards.md — HTML/CSS/JavaScript board UI (frontend changes)
+  - docs/api-spec.yml — API contracts and endpoint definitions
+  - docs/data-model.md — domain and data model
+  - docs/documentation-standards.md — docs structure and maintenance
+  - docs/development_guide.md — local setup and workflow
+  For implementation: adopt the relevant agent from ai-specs/agents/ (e.g. backend-developer.md for backend, frontend-developer.md for frontend). Use ai-specs/skills/ for workflow guidance when applicable.
+
+rules:
+  _global:
+    - "Before creating any artifact, read and apply docs/base-standards.md"
+    - "For backend-related artifacts, read docs/backend-standards.md and adopt guidelines from ai-specs/agents/backend-developer.md"
+    - "For frontend-related artifacts, read docs/frontend-standards.md and adopt guidelines from ai-specs/agents/frontend-developer.md"
+    - "Use docs/api-spec.yml and docs/data-model.md for API and data consistency in specs and tasks"
+    - "Keep user-story scope aligned with US/usXX.md and Avance_Proyecto_Grupo_1_corregido.md (RF/RNF/RN)"
+  proposal:
+    - "Tie proposals to TaskFlow DevOps goals: task board features and/or DevOps automation (CI, tests, CD, branch protection)"
+    - "Always include a Non-goals section scoped to the academic project size"
+  tasks:
+    - "Prefer small, verifiable tasks; include Pytest coverage for backend behavior"
+    - "When touching CI/CD, include GitHub Actions workflow and branch-protection implications (RN03)"

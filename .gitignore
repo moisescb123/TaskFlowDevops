@@ -1,0 +1,12 @@
+.DS_Store
+.worktrees/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+taskflow.db
+*.db
+.pytest_cache/
+.coverage
+htmlcov/
