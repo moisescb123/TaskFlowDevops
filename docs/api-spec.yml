@@ -72,10 +72,10 @@ paths:
     get:
       tags: [Users]
       summary: List users
-      description: Admin lists users; Developers may need a reduced list for assignee selection.
+      description: Admin lists users; Developers list users for assignee selection (US08). Viewer forbidden.
       responses:
         '200':
-          description: User list
+          description: User list (public fields only)
           content:
             application/json:
               schema:
@@ -85,7 +85,7 @@ paths:
         '401':
           description: Not authenticated
         '403':
-          description: Forbidden
+          description: Forbidden for Viewer
     post:
       tags: [Users]
       summary: Register user
@@ -168,7 +168,7 @@ paths:
     put:
       tags: [Tasks]
       summary: Update task
-      description: Developer edits title, priority, due date, and assignee (US06). Status changes use PATCH status (US09).
+      description: Developer edits title, priority, due date, and single assignee (US06/US08, RN01). Status changes use PATCH status (US09).
       requestBody:
         required: true
         content:

@@ -177,17 +177,21 @@ def test_admin_lists_users_without_password_fields(client):
         assert "password_hash" not in user
 
 
-@pytest.mark.parametrize(
-    ("email", "password"),
-    [
-        ("dev@taskflow.local", "Dev123!"),
-        ("viewer@taskflow.local", "Viewer123!"),
-    ],
-)
-def test_non_admin_cannot_list_users(client, email, password):
-    _login(client, email, password)
+def test_viewer_cannot_list_users(client):
+    _login(client, "viewer@taskflow.local", "Viewer123!")
     response = client.get("/api/users")
     assert response.status_code == 403
+
+
+def test_developer_can_list_users_for_assignee_picker(client):
+    """US08: Developers need registered users for the assignee picker."""
+    _login(client, "dev@taskflow.local", "Dev123!")
+    response = client.get("/api/users")
+    assert response.status_code == 200
+    users = response.get_json()
+    assert isinstance(users, list)
+    assert len(users) >= 1
+    assert all("password_hash" not in user for user in users)
 
 
 def test_anonymous_cannot_list_users(client):

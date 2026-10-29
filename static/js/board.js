@@ -1,5 +1,5 @@
 /**
- * Kanban board (US04–US07): list/group tasks, create, edit, and delete (Developer).
+ * Kanban board (US04–US08): list/group tasks, create/edit/delete, assignee picker.
  */
 (function () {
   const root = document.getElementById("board-root");
@@ -38,6 +38,7 @@
   let editInFlight = false;
   let deleteInFlight = false;
   let tasksById = {};
+  let assigneeOptionsLoaded = false;
 
   function escapeHtml(value) {
     return String(value)
@@ -173,12 +174,57 @@
     });
   }
 
+  function fillAssigneeSelect(selectEl, users) {
+    if (!selectEl) {
+      return;
+    }
+    const previous = selectEl.value;
+    selectEl.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = "Unassigned";
+    selectEl.appendChild(blank);
+    (users || []).forEach((user) => {
+      const option = document.createElement("option");
+      option.value = String(user.id);
+      option.textContent = `${user.full_name} (${user.email})`;
+      selectEl.appendChild(option);
+    });
+    if (previous) {
+      selectEl.value = previous;
+    }
+  }
+
+  async function loadAssigneeOptions() {
+    if (!canCreate || assigneeOptionsLoaded) {
+      return;
+    }
+    try {
+      const response = await fetch("/api/users", { credentials: "same-origin" });
+      if (response.status === 401) {
+        window.location.assign("/login");
+        return;
+      }
+      if (!response.ok) {
+        return;
+      }
+      const users = await response.json();
+      const list = Array.isArray(users) ? users : [];
+      fillAssigneeSelect(document.getElementById("task-assignee-id"), list);
+      fillAssigneeSelect(document.getElementById("edit-task-assignee-id"), list);
+      assigneeOptionsLoaded = true;
+    } catch (error) {
+      // Leave Unassigned-only selects; create/edit still work without assignee.
+    }
+  }
+
   function openCreateDialog() {
     if (!dialog || !form) {
       return;
     }
     clearCreateErrors();
     form.reset();
+    void loadAssigneeOptions();
     dialog.showModal();
   }
 
@@ -188,7 +234,7 @@
     }
   }
 
-  function openEditDialog(taskId) {
+  async function openEditDialog(taskId) {
     if (!editDialog || !editForm) {
       return;
     }
@@ -197,6 +243,7 @@
       return;
     }
     clearEditErrors();
+    await loadAssigneeOptions();
     editTaskIdInput.value = String(task.id);
     editForm.title.value = task.title || "";
     editForm.priority.value = task.priority || "medium";
@@ -448,5 +495,8 @@
     deleteForm.addEventListener("submit", submitDelete);
   }
 
+  if (canCreate) {
+    void loadAssigneeOptions();
+  }
   loadBoard();
 })();
