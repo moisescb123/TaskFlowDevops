@@ -236,3 +236,9 @@ button {
 .priority-medium { color: #9a6700; font-weight: 700; text-transform: capitalize; }
 .priority-low { color: var(--accent); font-weight: 700; text-transform: capitalize; }
 .card-actions { margin-top: 0.5rem; font-size: 0.8rem; }
+.edit-task-button {
+  margin-top: 0;
+  width: auto;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+}

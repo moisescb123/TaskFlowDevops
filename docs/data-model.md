@@ -78,6 +78,7 @@ Represents a work item on the project board.
 
 - Authenticated users load tasks via `GET /api/tasks`; the UI groups by `status`
 - Developers create tasks via `POST /api/tasks` (required title, priority, due date; optional assignee); Admin and Viewer cannot create
+- Developers update task fields via `PUT /api/tasks/{taskId}` (RN02); status changes are separate (US09)
 - New tasks start in `todo` and appear in the To Do column
 - Viewers may not call mutating task endpoints (`403`)
 

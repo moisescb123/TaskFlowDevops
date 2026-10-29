@@ -1,6 +1,5 @@
 /**
- * Kanban board view (US04/US05): load tasks, group by status, create tasks.
- * Viewer: mutate controls stay hidden/disabled (data-can-mutate=false).
+ * Kanban board (US04–US06): list/group tasks, create and edit (Developer).
  */
 (function () {
   const root = document.getElementById("board-root");
@@ -8,7 +7,6 @@
     return;
   }
 
-  const canMutate = root.dataset.canMutate === "true";
   const canCreate = root.dataset.canCreate === "true";
   const emptyEl = document.getElementById("board-empty");
   const errorEl = document.getElementById("board-error");
@@ -19,9 +17,18 @@
   const formError = document.getElementById("create-task-form-error");
   const submitBtn = document.getElementById("create-task-submit");
 
+  const editDialog = document.getElementById("edit-task-dialog");
+  const editForm = document.getElementById("edit-task-form");
+  const editCancelBtn = document.getElementById("edit-task-cancel");
+  const editFormError = document.getElementById("edit-task-form-error");
+  const editSubmitBtn = document.getElementById("edit-task-submit");
+  const editTaskIdInput = document.getElementById("edit-task-id");
+
   const STATUS_ORDER = ["todo", "in_progress", "done"];
   const FIELD_IDS = ["title", "priority", "due_date", "assignee_id"];
   let createInFlight = false;
+  let editInFlight = false;
+  let tasksById = {};
 
   function escapeHtml(value) {
     return String(value)
@@ -39,8 +46,8 @@
     const assignee =
       task.assignee_name ||
       (task.assignee_id != null ? `User #${task.assignee_id}` : "Unassigned");
-    const mutateBlock = canMutate
-      ? `<div class="card-actions muted">Edit / move (coming soon)</div>`
+    const mutateBlock = canCreate
+      ? `<div class="card-actions"><button type="button" class="edit-task-button" data-edit-id="${task.id}">Edit</button></div>`
       : "";
     return `<article class="task-card" data-task-id="${task.id}">
       <h3 class="task-title">${escapeHtml(task.title)}</h3>
@@ -66,6 +73,10 @@
 
   function renderTasks(tasks) {
     clearColumns();
+    tasksById = {};
+    (tasks || []).forEach((task) => {
+      tasksById[task.id] = task;
+    });
     const grouped = groupTasksByStatus(tasks);
 
     let total = 0;
@@ -102,7 +113,7 @@
     }
   }
 
-  function clearFieldErrors() {
+  function clearCreateErrors() {
     FIELD_IDS.forEach((name) => {
       const el = document.getElementById(`task-${name.replace("_", "-")}-error`);
       if (el) {
@@ -116,9 +127,33 @@
     }
   }
 
-  function showFieldErrors(fields) {
+  function showCreateErrors(fields) {
     Object.entries(fields || {}).forEach(([name, message]) => {
       const el = document.getElementById(`task-${name.replace("_", "-")}-error`);
+      if (el) {
+        el.hidden = false;
+        el.textContent = message;
+      }
+    });
+  }
+
+  function clearEditErrors() {
+    FIELD_IDS.forEach((name) => {
+      const el = document.getElementById(`edit-task-${name.replace("_", "-")}-error`);
+      if (el) {
+        el.hidden = true;
+        el.textContent = "";
+      }
+    });
+    if (editFormError) {
+      editFormError.hidden = true;
+      editFormError.textContent = "";
+    }
+  }
+
+  function showEditErrors(fields) {
+    Object.entries(fields || {}).forEach(([name, message]) => {
+      const el = document.getElementById(`edit-task-${name.replace("_", "-")}-error`);
       if (el) {
         el.hidden = false;
         el.textContent = message;
@@ -130,7 +165,7 @@
     if (!dialog || !form) {
       return;
     }
-    clearFieldErrors();
+    clearCreateErrors();
     form.reset();
     dialog.showModal();
   }
@@ -141,12 +176,36 @@
     }
   }
 
+  function openEditDialog(taskId) {
+    if (!editDialog || !editForm) {
+      return;
+    }
+    const task = tasksById[taskId];
+    if (!task) {
+      return;
+    }
+    clearEditErrors();
+    editTaskIdInput.value = String(task.id);
+    editForm.title.value = task.title || "";
+    editForm.priority.value = task.priority || "medium";
+    editForm.due_date.value = task.due_date || "";
+    editForm.assignee_id.value =
+      task.assignee_id != null ? String(task.assignee_id) : "";
+    editDialog.showModal();
+  }
+
+  function closeEditDialog() {
+    if (editDialog) {
+      editDialog.close();
+    }
+  }
+
   async function submitCreate(event) {
     event.preventDefault();
     if (!form || createInFlight) {
       return;
     }
-    clearFieldErrors();
+    clearCreateErrors();
     const title = form.title.value.trim();
     const priority = form.priority.value;
     const dueDate = form.due_date.value;
@@ -173,7 +232,7 @@
       }
       const payload = await response.json().catch(() => ({}));
       if (response.status === 400) {
-        showFieldErrors(payload.fields || {});
+        showCreateErrors(payload.fields || {});
         if (formError) {
           formError.hidden = false;
           formError.textContent = payload.message || "Validation failed";
@@ -202,6 +261,70 @@
     }
   }
 
+  async function submitEdit(event) {
+    event.preventDefault();
+    if (!editForm || editInFlight) {
+      return;
+    }
+    clearEditErrors();
+    const taskId = editTaskIdInput.value;
+    const title = editForm.title.value.trim();
+    const priority = editForm.priority.value;
+    const dueDate = editForm.due_date.value;
+    const assigneeRaw = editForm.assignee_id.value.trim();
+    const body = {
+      title,
+      priority,
+      due_date: dueDate,
+      assignee_id: assigneeRaw ? Number(assigneeRaw) : null,
+    };
+
+    editInFlight = true;
+    if (editSubmitBtn) {
+      editSubmitBtn.disabled = true;
+    }
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (response.status === 401) {
+        window.location.assign("/login");
+        return;
+      }
+      const payload = await response.json().catch(() => ({}));
+      if (response.status === 400) {
+        showEditErrors(payload.fields || {});
+        if (editFormError) {
+          editFormError.hidden = false;
+          editFormError.textContent = payload.message || "Validation failed";
+        }
+        return;
+      }
+      if (!response.ok) {
+        if (editFormError) {
+          editFormError.hidden = false;
+          editFormError.textContent = payload.message || "Unable to update task.";
+        }
+        return;
+      }
+      closeEditDialog();
+      await loadBoard();
+    } catch (error) {
+      if (editFormError) {
+        editFormError.hidden = false;
+        editFormError.textContent = "Network error updating the task.";
+      }
+    } finally {
+      editInFlight = false;
+      if (editSubmitBtn) {
+        editSubmitBtn.disabled = false;
+      }
+    }
+  }
+
   if (createBtn && !canCreate) {
     createBtn.hidden = true;
   }
@@ -211,6 +334,19 @@
       cancelBtn.addEventListener("click", closeCreateDialog);
     }
     form.addEventListener("submit", submitCreate);
+  }
+  if (canCreate && editDialog && editForm) {
+    root.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-edit-id]");
+      if (!button) {
+        return;
+      }
+      openEditDialog(button.getAttribute("data-edit-id"));
+    });
+    if (editCancelBtn) {
+      editCancelBtn.addEventListener("click", closeEditDialog);
+    }
+    editForm.addEventListener("submit", submitEdit);
   }
 
   loadBoard();
