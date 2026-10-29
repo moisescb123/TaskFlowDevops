@@ -19,6 +19,7 @@
     id="board-root"
     data-role="{{ user.role }}"
     data-can-mutate="{{ 'true' if user.role != 'viewer' else 'false' }}"
+    data-can-create="{{ 'true' if user.role == 'developer' else 'false' }}"
   >
     <div class="board-header">
       <h1>Task board</h1>
@@ -26,13 +27,43 @@
         type="button"
         id="create-task-button"
         class="create-task-button"
-        {% if user.role == 'viewer' %}hidden{% endif %}
-        disabled
-        title="Task creation arrives in US05"
+        {% if user.role != 'developer' %}hidden{% endif %}
       >Create task</button>
     </div>
     <p id="board-empty" class="muted board-empty" hidden>No tasks yet. The board will fill when tasks are created.</p>
     <p id="board-error" class="form-error" hidden></p>
+    {% if user.role == 'developer' %}
+    <dialog id="create-task-dialog" class="create-task-dialog">
+      <form id="create-task-form" method="dialog" novalidate>
+        <h2>Create task</h2>
+        <label for="task-title">Title</label>
+        <input id="task-title" name="title" type="text" required autocomplete="off">
+        <p class="field-error" id="task-title-error" hidden></p>
+
+        <label for="task-priority">Priority</label>
+        <select id="task-priority" name="priority" required>
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <p class="field-error" id="task-priority-error" hidden></p>
+
+        <label for="task-due-date">Due date</label>
+        <input id="task-due-date" name="due_date" type="date" required>
+        <p class="field-error" id="task-due-date-error" hidden></p>
+
+        <label for="task-assignee-id">Assignee id (optional)</label>
+        <input id="task-assignee-id" name="assignee_id" type="number" min="1" step="1">
+        <p class="field-error" id="task-assignee-id-error" hidden></p>
+
+        <p class="form-error" id="create-task-form-error" hidden></p>
+        <div class="dialog-actions">
+          <button type="button" id="create-task-cancel" class="secondary-button">Cancel</button>
+          <button type="submit" id="create-task-submit">Create</button>
+        </div>
+      </form>
+    </dialog>
+    {% endif %}
     <div class="board-columns" role="list">
       <section class="board-column" data-status="todo" aria-labelledby="col-todo">
         <h2 id="col-todo">To Do <span class="column-count" data-count>0</span></h2>

@@ -58,10 +58,11 @@ Post-login redirects: Admin → `/admin/users`; Developer/Viewer → `/board`.
 - Login UI: `/login`
 - Logout control: shared header button on `/board` and `/admin/users`
 
-### Task board (US04)
+### Task board (US04 / US05)
 
-- `GET /api/tasks` — authenticated list of tasks (empty until US05 creates them)
-- Board UI: `/board` with To Do / In progress / Done columns
+- `GET /api/tasks` — authenticated list of tasks
+- `POST /api/tasks` — Developer-only create `{ "title", "priority", "due_date", "assignee_id?" }` → `201` To Do task (RN02); Admin/Viewer `403`
+- Board UI: `/board` with To Do / In progress / Done columns; Create task dialog for Developer (`data-can-create`)
 - Viewer: read-only (`data-can-mutate=false`); mutating task APIs return `403`
 - Tasks persist in SQLite `tasks` table across restarts
 

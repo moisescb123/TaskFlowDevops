@@ -45,6 +45,21 @@ def non_viewer_required_api(view: F) -> F:
     return wrapped  # type: ignore[return-value]
 
 
+def developer_required_api(view: F) -> F:
+    """Allow only Developer (US05 create); Admin and Viewer get 403."""
+
+    @wraps(view)
+    def wrapped(*args: Any, **kwargs: Any):
+        user = current_user()
+        if user is None:
+            return jsonify({"message": "Unauthorized"}), 401
+        if user.role != "developer":
+            return jsonify({"message": "Forbidden"}), 403
+        return view(*args, **kwargs)
+
+    return wrapped  # type: ignore[return-value]
+
+
 def admin_required_api(view: F) -> F:
     @wraps(view)
     def wrapped(*args: Any, **kwargs: Any):

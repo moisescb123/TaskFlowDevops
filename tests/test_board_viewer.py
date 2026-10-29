@@ -87,10 +87,18 @@ def test_viewer_mutate_forbidden(client):
     assert response.status_code == 403
 
 
-def test_developer_create_stub_not_forbidden(client):
+def test_developer_create_not_forbidden(client):
     _login(client, "dev@taskflow.local", "Dev123!")
-    response = client.post("/api/tasks", json={"title": "Later"})
-    assert response.status_code == 501
+    response = client.post(
+        "/api/tasks",
+        json={
+            "title": "Later",
+            "priority": "medium",
+            "due_date": "2026-11-20",
+        },
+    )
+    assert response.status_code == 201
+    assert response.get_json()["status"] == "todo"
 
 
 def test_board_page_has_columns_for_viewer(client, app):

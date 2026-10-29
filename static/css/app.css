@@ -138,8 +138,51 @@ button {
 .create-task-button {
   margin-top: 0;
   width: auto;
-  opacity: 0.65;
-  cursor: not-allowed;
+}
+.create-task-dialog {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0;
+  width: min(420px, calc(100% - 2rem));
+  background: var(--card);
+  color: var(--ink);
+}
+.create-task-dialog::backdrop {
+  background: rgba(28, 36, 48, 0.45);
+}
+.create-task-dialog form {
+  margin: 0;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+.create-task-dialog h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+.create-task-dialog select,
+.create-task-dialog input[type="date"],
+.create-task-dialog input[type="number"] {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  background: #fff;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 1.1rem;
+}
+.secondary-button {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--border);
+  width: auto;
+}
+.dialog-actions button {
+  width: auto;
+  margin-top: 0;
 }
 .board-empty { margin: 0.75rem 0 1rem; }
 .board-columns {
