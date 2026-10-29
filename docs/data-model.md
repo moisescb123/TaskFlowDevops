@@ -79,6 +79,7 @@ Represents a work item on the project board.
 - Authenticated users load tasks via `GET /api/tasks`; the UI groups by `status`
 - Developers create tasks via `POST /api/tasks` (required title, priority, due date; optional assignee); Admin and Viewer cannot create
 - Developers update task fields via `PUT /api/tasks/{taskId}` (RN02); status changes are separate (US09)
+- Developers assign at most one registered user via `assignee_id` on create/edit (RN01 / US08); invalid assignee → `400`
 - Developers delete tasks via `DELETE /api/tasks/{taskId}` (hard delete; no soft-delete/undo)
 - New tasks start in `todo` and appear in the To Do column
 - Viewers may not call mutating task endpoints (`403`)

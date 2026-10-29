@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from flask import Blueprint, jsonify, request
 
-from app.auth.decorators import admin_required_api
+from app.auth.decorators import admin_required_api, non_viewer_required_api
 from app.services.user_service import (
     UserServiceError,
     get_users_for_admin,
@@ -13,8 +13,9 @@ bp = Blueprint("users_api", __name__, url_prefix="/api/users")
 
 
 @bp.get("")
-@admin_required_api
+@non_viewer_required_api
 def list_users_api():
+    """Admin full list; Developer reduced public list for assignee picker (US08)."""
     return jsonify(get_users_for_admin()), 200
 
 

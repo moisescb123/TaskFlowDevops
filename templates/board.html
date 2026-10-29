@@ -52,8 +52,10 @@
         <input id="task-due-date" name="due_date" type="date" required>
         <p class="field-error" id="task-due-date-error" hidden></p>
 
-        <label for="task-assignee-id">Assignee id (optional)</label>
-        <input id="task-assignee-id" name="assignee_id" type="number" min="1" step="1">
+        <label for="task-assignee-id">Assignee (optional)</label>
+        <select id="task-assignee-id" name="assignee_id">
+          <option value="">Unassigned</option>
+        </select>
         <p class="field-error" id="task-assignee-id-error" hidden></p>
 
         <p class="form-error" id="create-task-form-error" hidden></p>
@@ -83,8 +85,10 @@
         <input id="edit-task-due-date" name="due_date" type="date" required>
         <p class="field-error" id="edit-task-due-date-error" hidden></p>
 
-        <label for="edit-task-assignee-id">Assignee id (optional)</label>
-        <input id="edit-task-assignee-id" name="assignee_id" type="number" min="1" step="1">
+        <label for="edit-task-assignee-id">Assignee (optional)</label>
+        <select id="edit-task-assignee-id" name="assignee_id">
+          <option value="">Unassigned</option>
+        </select>
         <p class="field-error" id="edit-task-assignee-id-error" hidden></p>
 
         <p class="form-error" id="edit-task-form-error" hidden></p>
