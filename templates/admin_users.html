@@ -13,7 +13,56 @@
   </header>
   <main class="page">
     <h1>User management</h1>
-    <p class="muted">Placeholder admin page (US03 will add registration).</p>
+    <p class="muted">Register users and assign roles (Admin, Developer, Viewer).</p>
+
+    <section class="admin-panel" aria-labelledby="register-heading">
+      <h2 id="register-heading">Register user</h2>
+      <form id="register-form" novalidate>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="off" required>
+        <p id="email-error" class="field-error" hidden></p>
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" required>
+        <p id="password-error" class="field-error" hidden></p>
+
+        <label for="full_name">Full name</label>
+        <input id="full_name" name="full_name" type="text" autocomplete="name" required>
+        <p id="full_name-error" class="field-error" hidden></p>
+
+        <label for="role">Role</label>
+        <select id="role" name="role" required>
+          <option value="developer">Developer</option>
+          <option value="viewer">Viewer</option>
+          <option value="admin">Admin</option>
+        </select>
+        <p id="role-error" class="field-error" hidden></p>
+
+        <p id="form-error" class="form-error" hidden></p>
+        <p id="form-success" class="form-success" hidden></p>
+        <button type="submit">Create user</button>
+      </form>
+    </section>
+
+    <section class="admin-panel" aria-labelledby="list-heading">
+      <h2 id="list-heading">Registered users</h2>
+      <div class="table-wrap">
+        <table id="users-table">
+          <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Email</th>
+              <th scope="col">Full name</th>
+              <th scope="col">Role</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="4" class="muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </main>
+  <script src="{{ url_for('static', filename='js/admin_users.js') }}"></script>
 </body>
 </html>

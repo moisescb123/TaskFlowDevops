@@ -30,6 +30,19 @@ def login_required_page(view: F) -> F:
     return wrapped  # type: ignore[return-value]
 
 
+def admin_required_api(view: F) -> F:
+    @wraps(view)
+    def wrapped(*args: Any, **kwargs: Any):
+        user = current_user()
+        if user is None:
+            return jsonify({"message": "Unauthorized"}), 401
+        if user.role != "admin":
+            return jsonify({"message": "Forbidden"}), 403
+        return view(*args, **kwargs)
+
+    return wrapped  # type: ignore[return-value]
+
+
 def admin_required_page(view: F) -> F:
     @wraps(view)
     def wrapped(*args: Any, **kwargs: Any):

@@ -38,9 +38,9 @@ Default local URL: `http://localhost:5000`
 
 SQLite file defaults to `taskflow.db` in the project root (`DATABASE_PATH`). Tests use an isolated temp database.
 
-### Demo users (local only, US01)
+### Demo users (local only, US01 / US03 seed)
 
-Created by `python scripts/seed_users.py`:
+Created by `python scripts/seed_users.py` when those emails are missing (bootstrap Admin for empty DBs):
 
 | Email | Password | Role |
 |-------|----------|------|
@@ -55,6 +55,13 @@ Post-login redirects: Admin → `/admin/users`; Developer/Viewer → `/board`.
 - `POST /api/auth/login` — `{ "email", "password" }`
 - `GET /api/auth/me` — current session user
 - Login UI: `/login`
+
+### User management API (US03)
+
+- `POST /api/users` — Admin creates `{ "email", "password", "full_name", "role" }` → `201` public `User`
+- `GET /api/users` — Admin lists users (no password fields)
+- Admin UI: `/admin/users` (registration form + user table)
+- Non-Admin callers receive `403`; anonymous callers receive `401`
 
 ## Environment
 

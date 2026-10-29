@@ -1,4 +1,4 @@
-"""Seed demo users for local development (US01 without US03 registration UI)."""
+"""Seed demo users for local development when the users table is empty (US03)."""
 
 from __future__ import annotations
 

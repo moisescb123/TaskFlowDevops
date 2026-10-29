@@ -51,6 +51,13 @@ def get_user_by_id(user_id: int) -> User | None:
     return _row_to_user(row) if row else None
 
 
+def list_users() -> list[User]:
+    rows = get_db().execute(
+        "SELECT id, email, password_hash, full_name, role FROM users ORDER BY id ASC"
+    ).fetchall()
+    return [_row_to_user(row) for row in rows]
+
+
 def create_user(
     *,
     email: str,

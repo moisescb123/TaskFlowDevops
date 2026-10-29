@@ -43,7 +43,8 @@ Represents an authenticated person in the system.
 
 **Notes**
 
-- Admin registers users and assigns roles (US03).
+- Admin registers users and assigns roles via `POST /api/users` (US03); passwords are stored only as `password_hash`.
+- Admin lists users via `GET /api/users` without password material.
 - Role drives authorization for board and admin actions.
 
 ## 2. Task

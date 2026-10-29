@@ -28,9 +28,11 @@ def create_app(config_object: type = Config) -> Flask:
 
     from app.routes.auth import bp as auth_bp
     from app.routes.pages import bp as pages_bp
+    from app.routes.users import bp as users_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(pages_bp)
+    app.register_blueprint(users_bp)
 
     with app.app_context():
         init_db()
