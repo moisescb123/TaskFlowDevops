@@ -58,15 +58,16 @@ Post-login redirects: Admin → `/admin/users`; Developer/Viewer → `/board`.
 - Login UI: `/login`
 - Logout control: shared header button on `/board` and `/admin/users`
 
-### Task board (US04 / US05)
+### Task board (US04–US07)
 
 - `GET /api/tasks` — authenticated list of tasks
 - `POST /api/tasks` — Developer-only create `{ "title", "priority", "due_date", "assignee_id?" }` → `201` To Do task (RN02); Admin/Viewer `403`
 - `GET /api/tasks/{taskId}` — authenticated task detail
 - `PUT /api/tasks/{taskId}` — Developer-only update title/priority/due_date/assignee (US06, RN02); Admin/Viewer `403`
-- Board UI: `/board` with To Do / In progress / Done columns; Create/Edit dialogs for Developer (`data-can-create`)
+- `DELETE /api/tasks/{taskId}` — Developer-only hard delete → `204`; Admin/Viewer `403`; missing id `404`
+- Board UI: `/board` with To Do / In progress / Done columns; Create/Edit/Delete (confirm dialog) for Developer (`data-can-create`)
 - Viewer: read-only (`data-can-mutate=false`); mutating task APIs return `403`
-- Tasks persist in SQLite `tasks` table across restarts
+- Tasks persist in SQLite `tasks` table across restarts; deleted rows do not return after restart
 
 ### User management API (US03)
 

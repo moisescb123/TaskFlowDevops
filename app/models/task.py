@@ -169,3 +169,10 @@ def update_task(
     if cursor.rowcount == 0:
         return None
     return get_task_by_id(task_id)
+
+
+def delete_task(task_id: int) -> bool:
+    db = get_db()
+    cursor = db.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    db.commit()
+    return cursor.rowcount > 0

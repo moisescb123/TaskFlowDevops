@@ -1,5 +1,5 @@
 /**
- * Kanban board (US04–US06): list/group tasks, create and edit (Developer).
+ * Kanban board (US04–US07): list/group tasks, create, edit, and delete (Developer).
  */
 (function () {
   const root = document.getElementById("board-root");
@@ -24,10 +24,19 @@
   const editSubmitBtn = document.getElementById("edit-task-submit");
   const editTaskIdInput = document.getElementById("edit-task-id");
 
+  const deleteDialog = document.getElementById("delete-task-dialog");
+  const deleteForm = document.getElementById("delete-task-form");
+  const deleteCancelBtn = document.getElementById("delete-task-cancel");
+  const deleteFormError = document.getElementById("delete-task-form-error");
+  const deleteConfirmBtn = document.getElementById("delete-task-confirm");
+  const deleteTaskIdInput = document.getElementById("delete-task-id");
+  const deleteMessage = document.getElementById("delete-task-message");
+
   const STATUS_ORDER = ["todo", "in_progress", "done"];
   const FIELD_IDS = ["title", "priority", "due_date", "assignee_id"];
   let createInFlight = false;
   let editInFlight = false;
+  let deleteInFlight = false;
   let tasksById = {};
 
   function escapeHtml(value) {
@@ -47,7 +56,10 @@
       task.assignee_name ||
       (task.assignee_id != null ? `User #${task.assignee_id}` : "Unassigned");
     const mutateBlock = canCreate
-      ? `<div class="card-actions"><button type="button" class="edit-task-button" data-edit-id="${task.id}">Edit</button></div>`
+      ? `<div class="card-actions">
+          <button type="button" class="edit-task-button" data-edit-id="${task.id}">Edit</button>
+          <button type="button" class="delete-task-button" data-delete-id="${task.id}">Delete</button>
+        </div>`
       : "";
     return `<article class="task-card" data-task-id="${task.id}">
       <h3 class="task-title">${escapeHtml(task.title)}</h3>
@@ -200,6 +212,31 @@
     }
   }
 
+  function openDeleteDialog(taskId) {
+    if (!deleteDialog || !deleteTaskIdInput) {
+      return;
+    }
+    const task = tasksById[taskId];
+    if (!task) {
+      return;
+    }
+    if (deleteFormError) {
+      deleteFormError.hidden = true;
+      deleteFormError.textContent = "";
+    }
+    deleteTaskIdInput.value = String(task.id);
+    if (deleteMessage) {
+      deleteMessage.textContent = `Delete "${task.title}"? This cannot be undone.`;
+    }
+    deleteDialog.showModal();
+  }
+
+  function closeDeleteDialog() {
+    if (deleteDialog) {
+      deleteDialog.close();
+    }
+  }
+
   async function submitCreate(event) {
     event.preventDefault();
     if (!form || createInFlight) {
@@ -325,6 +362,58 @@
     }
   }
 
+  async function submitDelete(event) {
+    event.preventDefault();
+    if (!deleteForm || deleteInFlight) {
+      return;
+    }
+    const taskId = deleteTaskIdInput.value;
+    if (deleteFormError) {
+      deleteFormError.hidden = true;
+      deleteFormError.textContent = "";
+    }
+
+    deleteInFlight = true;
+    if (deleteConfirmBtn) {
+      deleteConfirmBtn.disabled = true;
+    }
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      if (response.status === 401) {
+        window.location.assign("/login");
+        return;
+      }
+      if (response.status === 204) {
+        closeDeleteDialog();
+        const card = root.querySelector(`.task-card[data-task-id="${taskId}"]`);
+        if (card) {
+          card.remove();
+        }
+        delete tasksById[taskId];
+        await loadBoard();
+        return;
+      }
+      const payload = await response.json().catch(() => ({}));
+      if (deleteFormError) {
+        deleteFormError.hidden = false;
+        deleteFormError.textContent = payload.message || "Unable to delete task.";
+      }
+    } catch (error) {
+      if (deleteFormError) {
+        deleteFormError.hidden = false;
+        deleteFormError.textContent = "Network error deleting the task.";
+      }
+    } finally {
+      deleteInFlight = false;
+      if (deleteConfirmBtn) {
+        deleteConfirmBtn.disabled = false;
+      }
+    }
+  }
+
   if (createBtn && !canCreate) {
     createBtn.hidden = true;
   }
@@ -337,16 +426,26 @@
   }
   if (canCreate && editDialog && editForm) {
     root.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-edit-id]");
-      if (!button) {
+      const editButton = event.target.closest("[data-edit-id]");
+      if (editButton) {
+        openEditDialog(editButton.getAttribute("data-edit-id"));
         return;
       }
-      openEditDialog(button.getAttribute("data-edit-id"));
+      const deleteButton = event.target.closest("[data-delete-id]");
+      if (deleteButton) {
+        openDeleteDialog(deleteButton.getAttribute("data-delete-id"));
+      }
     });
     if (editCancelBtn) {
       editCancelBtn.addEventListener("click", closeEditDialog);
     }
     editForm.addEventListener("submit", submitEdit);
+  }
+  if (canCreate && deleteDialog && deleteForm) {
+    if (deleteCancelBtn) {
+      deleteCancelBtn.addEventListener("click", closeDeleteDialog);
+    }
+    deleteForm.addEventListener("submit", submitDelete);
   }
 
   loadBoard();

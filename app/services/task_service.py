@@ -9,6 +9,7 @@ from app.models.task import (
     VALID_PRIORITIES,
     Task,
     create_task,
+    delete_task,
     get_task_by_id,
     list_tasks,
     update_task,
@@ -178,6 +179,11 @@ def update_task_from_payload(
     if updated is None:
         raise TaskServiceError(status=404, message="Task not found")
     return updated.to_public_dict()
+
+
+def delete_task_by_id(task_id: int) -> None:
+    if not delete_task(task_id):
+        raise TaskServiceError(status=404, message="Task not found")
 
 
 def seed_task_for_tests(

@@ -235,10 +235,26 @@ button {
 .priority-high { color: var(--danger); font-weight: 700; text-transform: capitalize; }
 .priority-medium { color: #9a6700; font-weight: 700; text-transform: capitalize; }
 .priority-low { color: var(--accent); font-weight: 700; text-transform: capitalize; }
-.card-actions { margin-top: 0.5rem; font-size: 0.8rem; }
-.edit-task-button {
+.card-actions {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.edit-task-button,
+.delete-task-button {
   margin-top: 0;
   width: auto;
   padding: 0.35rem 0.7rem;
   font-size: 0.85rem;
+}
+.delete-task-button,
+.danger-button {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+.delete-task-button:hover,
+.danger-button:hover {
+  filter: brightness(0.92);
 }

@@ -94,6 +94,18 @@
         </div>
       </form>
     </dialog>
+    <dialog id="delete-task-dialog" class="create-task-dialog">
+      <form id="delete-task-form" method="dialog">
+        <h2>Delete task</h2>
+        <input type="hidden" id="delete-task-id" name="task_id">
+        <p id="delete-task-message">Delete this task? This cannot be undone.</p>
+        <p class="form-error" id="delete-task-form-error" hidden></p>
+        <div class="dialog-actions">
+          <button type="button" id="delete-task-cancel" class="secondary-button">Cancel</button>
+          <button type="submit" id="delete-task-confirm" class="danger-button">Delete</button>
+        </div>
+      </form>
+    </dialog>
     {% endif %}
     <div class="board-columns" role="list">
       <section class="board-column" data-status="todo" aria-labelledby="col-todo">
