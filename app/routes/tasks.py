@@ -11,6 +11,7 @@ from app.services.task_service import (
     get_task_public,
     get_tasks_for_board,
     update_task_from_payload,
+    update_task_status_from_payload,
 )
 
 bp = Blueprint("tasks_api", __name__, url_prefix="/api/tasks")
@@ -77,3 +78,17 @@ def delete_task_api(task_id: int):
     except TaskServiceError as error:
         return _error_response(error)
     return ("", 204)
+
+
+@bp.patch("/<int:task_id>/status")
+@developer_required_api
+def update_task_status_api(task_id: int):
+    """Developer-only status change with RN04 (US09)."""
+    try:
+        task = update_task_status_from_payload(
+            task_id=task_id,
+            payload=request.get_json(silent=True),
+        )
+    except TaskServiceError as error:
+        return _error_response(error)
+    return jsonify(task), 200

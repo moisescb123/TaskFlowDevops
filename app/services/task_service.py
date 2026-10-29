@@ -7,16 +7,25 @@ from typing import Any
 
 from app.models.task import (
     VALID_PRIORITIES,
+    VALID_STATUSES,
     Task,
     create_task,
     delete_task,
     get_task_by_id,
     list_tasks,
     update_task,
+    update_task_status,
 )
 from app.models.user import get_user_by_id
 
 DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+# RN04: no todo → done skip. US09 also allows backward moves via in_progress.
+ALLOWED_STATUS_TRANSITIONS: dict[str, frozenset[str]] = {
+    "todo": frozenset({"todo", "in_progress"}),
+    "in_progress": frozenset({"in_progress", "todo", "done"}),
+    "done": frozenset({"done", "in_progress"}),
+}
 
 
 @dataclass
@@ -184,6 +193,55 @@ def update_task_from_payload(
 def delete_task_by_id(task_id: int) -> None:
     if not delete_task(task_id):
         raise TaskServiceError(status=404, message="Task not found")
+
+
+def update_task_status_from_payload(
+    *,
+    task_id: int,
+    payload: dict[str, Any] | None,
+) -> dict[str, Any]:
+    existing = get_task_by_id(task_id)
+    if existing is None:
+        raise TaskServiceError(status=404, message="Task not found")
+
+    data = payload or {}
+    status_raw = data.get("status")
+    status = status_raw.strip() if isinstance(status_raw, str) else ""
+    if not status:
+        raise TaskServiceError(
+            status=400,
+            message="Validation failed",
+            fields={"status": "Status is required"},
+        )
+    if status not in VALID_STATUSES:
+        raise TaskServiceError(
+            status=400,
+            message="Validation failed",
+            fields={"status": "Status must be todo, in_progress, or done"},
+        )
+
+    allowed = ALLOWED_STATUS_TRANSITIONS.get(existing.status, frozenset())
+    if status not in allowed:
+        raise TaskServiceError(
+            status=400,
+            message="Illegal status transition",
+            fields={
+                "status": (
+                    "Cannot move directly from To Do to Done; "
+                    "move to In progress first (RN04)"
+                    if existing.status == "todo" and status == "done"
+                    else f"Transition from {existing.status} to {status} is not allowed"
+                )
+            },
+        )
+
+    if status == existing.status:
+        return existing.to_public_dict()
+
+    updated = update_task_status(task_id=task_id, status=status)
+    if updated is None:
+        raise TaskServiceError(status=404, message="Task not found")
+    return updated.to_public_dict()
 
 
 def seed_task_for_tests(

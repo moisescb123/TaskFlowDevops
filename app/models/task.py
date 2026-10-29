@@ -171,6 +171,24 @@ def update_task(
     return get_task_by_id(task_id)
 
 
+def update_task_status(*, task_id: int, status: str) -> Task | None:
+    if status not in VALID_STATUSES:
+        raise ValueError(f"Invalid status: {status}")
+    db = get_db()
+    cursor = db.execute(
+        """
+        UPDATE tasks
+        SET status = ?, updated_at = datetime('now')
+        WHERE id = ?
+        """,
+        (status, task_id),
+    )
+    db.commit()
+    if cursor.rowcount == 0:
+        return None
+    return get_task_by_id(task_id)
+
+
 def delete_task(task_id: int) -> bool:
     db = get_db()
     cursor = db.execute("DELETE FROM tasks WHERE id = ?", (task_id,))

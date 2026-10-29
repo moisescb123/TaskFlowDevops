@@ -1,5 +1,5 @@
 /**
- * Kanban board (US04–US08): list/group tasks, create/edit/delete, assignee picker.
+ * Kanban board (US04–US09): CRUD, assignee picker, status transitions (RN04).
  */
 (function () {
   const root = document.getElementById("board-root");
@@ -37,6 +37,7 @@
   let createInFlight = false;
   let editInFlight = false;
   let deleteInFlight = false;
+  let statusInFlight = false;
   let tasksById = {};
   let assigneeOptionsLoaded = false;
 
@@ -52,12 +53,37 @@
     return `priority-${escapeHtml(priority || "medium")}`;
   }
 
+  function statusMoveButtons(task) {
+    if (!canCreate) {
+      return "";
+    }
+    const moves = [];
+    if (task.status === "todo") {
+      moves.push(
+        `<button type="button" class="status-task-button" data-status-id="${task.id}" data-status-to="in_progress">Start</button>`
+      );
+    } else if (task.status === "in_progress") {
+      moves.push(
+        `<button type="button" class="status-task-button" data-status-id="${task.id}" data-status-to="todo">Back to To Do</button>`
+      );
+      moves.push(
+        `<button type="button" class="status-task-button" data-status-id="${task.id}" data-status-to="done">Complete</button>`
+      );
+    } else if (task.status === "done") {
+      moves.push(
+        `<button type="button" class="status-task-button" data-status-id="${task.id}" data-status-to="in_progress">Reopen</button>`
+      );
+    }
+    return moves.join("");
+  }
+
   function renderCard(task) {
     const assignee =
       task.assignee_name ||
       (task.assignee_id != null ? `User #${task.assignee_id}` : "Unassigned");
     const mutateBlock = canCreate
       ? `<div class="card-actions">
+          ${statusMoveButtons(task)}
           <button type="button" class="edit-task-button" data-edit-id="${task.id}">Edit</button>
           <button type="button" class="delete-task-button" data-delete-id="${task.id}">Delete</button>
         </div>`
@@ -471,8 +497,53 @@
     }
     form.addEventListener("submit", submitCreate);
   }
+  async function moveTaskStatus(taskId, nextStatus) {
+    if (statusInFlight || !taskId || !nextStatus) {
+      return;
+    }
+    statusInFlight = true;
+    errorEl.hidden = true;
+    errorEl.textContent = "";
+    try {
+      const response = await fetch(`/api/tasks/${taskId}/status`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      if (response.status === 401) {
+        window.location.assign("/login");
+        return;
+      }
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const fieldMsg =
+          payload.fields && payload.fields.status
+            ? payload.fields.status
+            : payload.message || "Unable to change status.";
+        errorEl.hidden = false;
+        errorEl.textContent = fieldMsg;
+        return;
+      }
+      await loadBoard();
+    } catch (error) {
+      errorEl.hidden = false;
+      errorEl.textContent = "Network error changing status.";
+    } finally {
+      statusInFlight = false;
+    }
+  }
+
   if (canCreate && editDialog && editForm) {
     root.addEventListener("click", (event) => {
+      const statusButton = event.target.closest("[data-status-id]");
+      if (statusButton) {
+        void moveTaskStatus(
+          statusButton.getAttribute("data-status-id"),
+          statusButton.getAttribute("data-status-to")
+        );
+        return;
+      }
       const editButton = event.target.closest("[data-edit-id]");
       if (editButton) {
         openEditDialog(editButton.getAttribute("data-edit-id"));
