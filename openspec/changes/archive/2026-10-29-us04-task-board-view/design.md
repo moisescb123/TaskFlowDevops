@@ -11,7 +11,7 @@ See proposal.md. Board may show empty until US05 creates tasks; list endpoint st
 
 ## Decisions
 
-1. `GET /api/tasks` returns all tasks; client groups by `status`.
+1. `GET /api/tasks` returns all tasks; client groups by `status` via a pure `groupTasksByStatus` helper (testable with Node from Pytest).
 2. Hide/disable mutate controls for `viewer` role in JS/templates; still enforce 403 server-side.
 3. Placeholder empty state when no tasks.
 

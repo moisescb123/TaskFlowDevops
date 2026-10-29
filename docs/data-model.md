@@ -74,6 +74,11 @@ Represents a work item on the project board.
 - At most one primary assignee (`assignee_id`)
 - Assignee must reference an existing User
 
+**Board (US04)**
+
+- Authenticated users load tasks via `GET /api/tasks`; the UI groups by `status`
+- Viewers may not call mutating task endpoints (`403`)
+
 ## Non-persisted Concepts
 
 - **Board**: derived view grouping tasks by `status` columns.

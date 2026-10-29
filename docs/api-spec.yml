@@ -279,6 +279,10 @@ components:
         priority: { $ref: '#/components/schemas/TaskPriority' }
         due_date: { type: string, format: date }
         assignee_id: { type: integer, nullable: true }
+        assignee_name:
+          type: string
+          nullable: true
+          description: Convenience display name from assignee join (US04 board)
         created_by_id: { type: integer }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }

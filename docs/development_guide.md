@@ -58,6 +58,13 @@ Post-login redirects: Admin → `/admin/users`; Developer/Viewer → `/board`.
 - Login UI: `/login`
 - Logout control: shared header button on `/board` and `/admin/users`
 
+### Task board (US04)
+
+- `GET /api/tasks` — authenticated list of tasks (empty until US05 creates them)
+- Board UI: `/board` with To Do / In progress / Done columns
+- Viewer: read-only (`data-can-mutate=false`); mutating task APIs return `403`
+- Tasks persist in SQLite `tasks` table across restarts
+
 ### User management API (US03)
 
 - `POST /api/users` — Admin creates `{ "email", "password", "full_name", "role" }` → `201` public `User`
