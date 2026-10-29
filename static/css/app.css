@@ -243,11 +243,16 @@ button {
   flex-wrap: wrap;
 }
 .edit-task-button,
-.delete-task-button {
+.delete-task-button,
+.status-task-button {
   margin-top: 0;
   width: auto;
   padding: 0.35rem 0.7rem;
   font-size: 0.85rem;
+}
+.status-task-button {
+  background: var(--accent);
+  border-color: var(--accent);
 }
 .delete-task-button,
 .danger-button {
