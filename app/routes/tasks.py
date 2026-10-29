@@ -7,6 +7,7 @@ from app.services.auth_service import current_user
 from app.services.task_service import (
     TaskServiceError,
     create_task_from_payload,
+    delete_task_by_id,
     get_task_public,
     get_tasks_for_board,
     update_task_from_payload,
@@ -65,3 +66,14 @@ def update_task_api(task_id: int):
     except TaskServiceError as error:
         return _error_response(error)
     return jsonify(task), 200
+
+
+@bp.delete("/<int:task_id>")
+@developer_required_api
+def delete_task_api(task_id: int):
+    """Developer-only hard delete task (US07)."""
+    try:
+        delete_task_by_id(task_id)
+    except TaskServiceError as error:
+        return _error_response(error)
+    return ("", 204)
