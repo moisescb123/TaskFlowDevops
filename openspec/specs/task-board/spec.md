@@ -1,18 +1,19 @@
-# Spec Delta
+# task-board Specification
 
 ## Purpose
 
 Show an authenticated Kanban-style board of tasks by status, with Viewer unable to mutate data.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Board shows tasks by status
 
 The system SHALL display authenticated users a board with columns To Do, In progress, and Done containing the corresponding tasks.
 
 #### Scenario: Viewer sees columns
-- **WHEN** a Viewer opens the board
-- **THEN** tasks appear under the three status columns with title, assignee, due date, and priority visible when present
+- **WHEN** a Viewer opens the board and tasks exist with statuses todo, in_progress, and done
+- **THEN** each task appears under the column matching its status, with title, assignee, due date, and priority visible when present
+- **AND** automated tests prove status-to-column placement (not only column shell markup or a flat task list)
 
 ### Requirement: Viewer cannot mutate
 

@@ -14,10 +14,42 @@
       <button type="button" id="logout-button" class="logout-button">Log out</button>
     </div>
   </header>
-  <main class="page">
-    <h1>Task board</h1>
-    <p class="muted">Placeholder board (US04 will add columns and cards).</p>
+  <main
+    class="page board-page"
+    id="board-root"
+    data-role="{{ user.role }}"
+    data-can-mutate="{{ 'true' if user.role != 'viewer' else 'false' }}"
+  >
+    <div class="board-header">
+      <h1>Task board</h1>
+      <button
+        type="button"
+        id="create-task-button"
+        class="create-task-button"
+        {% if user.role == 'viewer' %}hidden{% endif %}
+        disabled
+        title="Task creation arrives in US05"
+      >Create task</button>
+    </div>
+    <p id="board-empty" class="muted board-empty" hidden>No tasks yet. The board will fill when tasks are created.</p>
+    <p id="board-error" class="form-error" hidden></p>
+    <div class="board-columns" role="list">
+      <section class="board-column" data-status="todo" aria-labelledby="col-todo">
+        <h2 id="col-todo">To Do <span class="column-count" data-count>0</span></h2>
+        <div class="column-cards" data-cards></div>
+      </section>
+      <section class="board-column" data-status="in_progress" aria-labelledby="col-progress">
+        <h2 id="col-progress">In progress <span class="column-count" data-count>0</span></h2>
+        <div class="column-cards" data-cards></div>
+      </section>
+      <section class="board-column" data-status="done" aria-labelledby="col-done">
+        <h2 id="col-done">Done <span class="column-count" data-count>0</span></h2>
+        <div class="column-cards" data-cards></div>
+      </section>
+    </div>
   </main>
   <script src="{{ url_for('static', filename='js/logout.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/board_grouping.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/board.js') }}"></script>
 </body>
 </html>
