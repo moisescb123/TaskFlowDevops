@@ -118,8 +118,28 @@ pytest
 
 ### Related (later stories)
 
-- Protect `main` so merges require a green CI check (RN03 / US14).
 - Deploy only after successful verification (US15).
+
+## Branch protection (US14)
+
+RN03: protect `main` so merges require a green automated test check.
+
+| Item | Value |
+|------|--------|
+| Protected branch | `main` |
+| Required status check | **`Pytest`** (job name in `.github/workflows/ci.yml`) |
+| Ops guide | [`docs/branch-protection.md`](branch-protection.md) (Rulesets, classic UI, `gh` API) |
+
+### Developer steps
+
+1. Open a pull request targeting **`main`** (avoid direct pushes).
+2. Wait for the **Pytest** check to pass.
+3. If **Pytest** fails, merge stays blocked until the suite is fixed.
+4. Repo **Admins** apply or update protection using `docs/branch-protection.md` (requires GitHub admin rights).
+
+### Default branch
+
+Prefer **`main`** as the repository default branch so PR targets and RN03 align.
 
 ## Automated testing (US13)
 
@@ -139,7 +159,7 @@ Pytest is the project’s automated verification suite. CI (US12) runs it after 
 |------|----------------------|--------|
 | RN01 (single assignee) | `tests/test_task_assignee.py` | |
 | RN02 (title, due date, priority required) | `tests/test_task_create.py`, `tests/test_task_priority.py`, `tests/test_task_due_date.py` | |
-| RN03 (protect main / green tests) | — | Enforced in US14 + CI |
+| RN03 (protect main / green tests) | CI check **`Pytest`** + `docs/branch-protection.md` | GitHub settings (US14) |
 | RN04 (no To Do → Done skip) | `tests/test_task_status.py` | |
 
 ### Developer steps (local parity with CI)
