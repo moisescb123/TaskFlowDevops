@@ -87,11 +87,40 @@ SECRET_KEY=change-me-to-a-long-random-value
 DATABASE_PATH=taskflow.db
 ```
 
-## CI/CD
+## CI/CD (US12)
 
-- Workflow `.github/workflows/ci.yml` installs dependencies and runs Pytest on push and pull requests.
+Continuous integration runs on GitHub Actions so Developers get automatic validation on every integrate.
+
+### What runs
+
+Workflow file: `.github/workflows/ci.yml` (versioned in the repo).
+
+| Item | Value |
+|------|--------|
+| Workflow name | `CI` |
+| Job check name | `Pytest` (visible on commit/PR checks) |
+| Triggers | `push` and `pull_request` |
+| Runner | `ubuntu-latest` |
+| Python | 3.11 (with pip cache) |
+| Steps | Checkout → set up Python → `pip install -r requirements.txt` → `pytest` |
+
+### Developer steps
+
+1. Push commits or open/update a pull request.
+2. Open the commit or PR **Checks** tab on GitHub; a run named **CI** / **Pytest** should start automatically.
+3. Wait for green before merging. On failure, open the failed run and expand the step that failed (Install dependencies or Run Pytest) — logs identify the failing step.
+4. Reproduce locally with the same commands CI uses:
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
+### Related (later stories)
+
 - Protect `main` so merges require a green CI check (RN03 / US14).
 - Deploy only after successful verification (US15).
+- Expand test coverage under CI (US13).
 
 ## Project References
 
