@@ -120,7 +120,39 @@ pytest
 
 - Protect `main` so merges require a green CI check (RN03 / US14).
 - Deploy only after successful verification (US15).
-- Expand test coverage under CI (US13).
+
+## Automated testing (US13)
+
+Pytest is the project’s automated verification suite. CI (US12) runs it after installing dependencies so failing tests fail the check before merge.
+
+### Suite layout
+
+| Path | Role |
+|------|------|
+| `pytest.ini` | `testpaths = tests`, `pythonpath = .` |
+| `tests/conftest.py` | Isolated temp SQLite DB per test (`TESTING=True`) |
+| `tests/test_*.py` | Feature/API coverage (auth, users, tasks, CI structure) |
+
+### Business-rule coverage (as features landed)
+
+| Rule | Covered by (examples) | Notes |
+|------|----------------------|--------|
+| RN01 (single assignee) | `tests/test_task_assignee.py` | |
+| RN02 (title, due date, priority required) | `tests/test_task_create.py`, `tests/test_task_priority.py`, `tests/test_task_due_date.py` | |
+| RN03 (protect main / green tests) | — | Enforced in US14 + CI |
+| RN04 (no To Do → Done skip) | `tests/test_task_status.py` | |
+
+### Developer steps (local parity with CI)
+
+Use the same commands as the CI **Run Pytest** step:
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
+- Green locally should match a green **Pytest** check on GitHub when the suite and dependencies match.
+- A failing test fails the CI job (non-zero exit) so the PR check stays red until fixed.
 
 ## Project References
 
