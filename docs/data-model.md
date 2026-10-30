@@ -43,7 +43,8 @@ Represents an authenticated person in the system.
 
 **Notes**
 
-- Admin registers users and assigns roles (US03).
+- Admin registers users and assigns roles via `POST /api/users` (US03); passwords are stored only as `password_hash`.
+- Admin lists users via `GET /api/users` without password material.
 - Role drives authorization for board and admin actions.
 
 ## 2. Task
@@ -55,8 +56,8 @@ Represents a work item on the project board.
 | `id` | integer PK | Auto-generated |
 | `title` | string | Required (RN02) |
 | `status` | enum | `todo`, `in_progress`, `done` |
-| `priority` | enum | `high`, `medium`, `low` (RN02) |
-| `due_date` | date | Required (RN02) |
+| `priority` | enum | `high`, `medium`, `low` (RN02 / US10); shown on board cards as a color badge |
+| `due_date` | date | Required (RN02 / US11); ISO `YYYY-MM-DD`; shown on board cards |
 | `assignee_id` | FK → User | Optional at model level but business flows assign a single primary responsible (RN01) |
 | `created_by_id` | FK → User | Developer who created the task |
 | `created_at` | datetime | Set on create |
@@ -73,10 +74,21 @@ Represents a work item on the project board.
 - At most one primary assignee (`assignee_id`)
 - Assignee must reference an existing User
 
+**Board (US04 / US05)**
+
+- Authenticated users load tasks via `GET /api/tasks`; the UI groups by `status`
+- Developers create tasks via `POST /api/tasks` (required title, priority, due date; optional assignee); Admin and Viewer cannot create
+- Developers update task fields via `PUT /api/tasks/{taskId}` (RN02); status changes are separate (US09)
+- Developers assign at most one registered user via `assignee_id` on create/edit (RN01 / US08); invalid assignee → `400`
+- Developers change status via `PATCH /api/tasks/{taskId}/status` (US09); direct `todo` → `done` is rejected (RN04)
+- Developers delete tasks via `DELETE /api/tasks/{taskId}` (hard delete; no soft-delete/undo)
+- New tasks start in `todo` and appear in the To Do column
+- Viewers may not call mutating task endpoints (`403`)
+
 ## Non-persisted Concepts
 
 - **Board**: derived view grouping tasks by `status` columns.
-- **Session**: authentication session linking the current user to a role for authorization checks.
+- **Session**: authentication session linking the current user to a role for authorization checks (Flask client-signed cookie). Logout (`POST /api/auth/logout`, US02) clears session data and expires the cookie so that client needs a new login; stolen cookie replay without a denylist is out of scope.
 
 ## Alignment
 

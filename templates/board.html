@@ -9,11 +9,125 @@
 <body>
   <header class="topbar">
     <strong>TaskFlow DevOps</strong>
-    <span class="muted">{{ user.full_name }} ({{ user.role }})</span>
+    <div class="topbar-actions">
+      <span class="muted">{{ user.full_name }} ({{ user.role }})</span>
+      <button type="button" id="logout-button" class="logout-button">Log out</button>
+    </div>
   </header>
-  <main class="page">
-    <h1>Task board</h1>
-    <p class="muted">Placeholder board (US04 will add columns and cards).</p>
+  <main
+    class="page board-page"
+    id="board-root"
+    data-role="{{ user.role }}"
+    data-can-mutate="{{ 'true' if user.role != 'viewer' else 'false' }}"
+    data-can-create="{{ 'true' if user.role == 'developer' else 'false' }}"
+  >
+    <div class="board-header">
+      <h1>Task board</h1>
+      <button
+        type="button"
+        id="create-task-button"
+        class="create-task-button"
+        {% if user.role != 'developer' %}hidden{% endif %}
+      >Create task</button>
+    </div>
+    <p id="board-empty" class="muted board-empty" hidden>No tasks yet. The board will fill when tasks are created.</p>
+    <p id="board-error" class="form-error" hidden></p>
+    {% if user.role == 'developer' %}
+    <dialog id="create-task-dialog" class="create-task-dialog">
+      <form id="create-task-form" method="dialog" novalidate>
+        <h2>Create task</h2>
+        <label for="task-title">Title</label>
+        <input id="task-title" name="title" type="text" required autocomplete="off">
+        <p class="field-error" id="task-title-error" hidden></p>
+
+        <label for="task-priority">Priority</label>
+        <select id="task-priority" name="priority" required>
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <p class="field-error" id="task-priority-error" hidden></p>
+
+        <label for="task-due-date">Due date</label>
+        <input id="task-due-date" name="due_date" type="date" required>
+        <p class="field-error" id="task-due-date-error" hidden></p>
+
+        <label for="task-assignee-id">Assignee (optional)</label>
+        <select id="task-assignee-id" name="assignee_id">
+          <option value="">Unassigned</option>
+        </select>
+        <p class="field-error" id="task-assignee-id-error" hidden></p>
+
+        <p class="form-error" id="create-task-form-error" hidden></p>
+        <div class="dialog-actions">
+          <button type="button" id="create-task-cancel" class="secondary-button">Cancel</button>
+          <button type="submit" id="create-task-submit">Create</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="edit-task-dialog" class="create-task-dialog">
+      <form id="edit-task-form" method="dialog" novalidate>
+        <h2>Edit task</h2>
+        <input type="hidden" id="edit-task-id" name="task_id">
+        <label for="edit-task-title">Title</label>
+        <input id="edit-task-title" name="title" type="text" required autocomplete="off">
+        <p class="field-error" id="edit-task-title-error" hidden></p>
+
+        <label for="edit-task-priority">Priority</label>
+        <select id="edit-task-priority" name="priority" required>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <p class="field-error" id="edit-task-priority-error" hidden></p>
+
+        <label for="edit-task-due-date">Due date</label>
+        <input id="edit-task-due-date" name="due_date" type="date" required>
+        <p class="field-error" id="edit-task-due-date-error" hidden></p>
+
+        <label for="edit-task-assignee-id">Assignee (optional)</label>
+        <select id="edit-task-assignee-id" name="assignee_id">
+          <option value="">Unassigned</option>
+        </select>
+        <p class="field-error" id="edit-task-assignee-id-error" hidden></p>
+
+        <p class="form-error" id="edit-task-form-error" hidden></p>
+        <div class="dialog-actions">
+          <button type="button" id="edit-task-cancel" class="secondary-button">Cancel</button>
+          <button type="submit" id="edit-task-submit">Save</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="delete-task-dialog" class="create-task-dialog">
+      <form id="delete-task-form" method="dialog">
+        <h2>Delete task</h2>
+        <input type="hidden" id="delete-task-id" name="task_id">
+        <p id="delete-task-message">Delete this task? This cannot be undone.</p>
+        <p class="form-error" id="delete-task-form-error" hidden></p>
+        <div class="dialog-actions">
+          <button type="button" id="delete-task-cancel" class="secondary-button">Cancel</button>
+          <button type="submit" id="delete-task-confirm" class="danger-button">Delete</button>
+        </div>
+      </form>
+    </dialog>
+    {% endif %}
+    <div class="board-columns" role="list">
+      <section class="board-column" data-status="todo" aria-labelledby="col-todo">
+        <h2 id="col-todo">To Do <span class="column-count" data-count>0</span></h2>
+        <div class="column-cards" data-cards></div>
+      </section>
+      <section class="board-column" data-status="in_progress" aria-labelledby="col-progress">
+        <h2 id="col-progress">In progress <span class="column-count" data-count>0</span></h2>
+        <div class="column-cards" data-cards></div>
+      </section>
+      <section class="board-column" data-status="done" aria-labelledby="col-done">
+        <h2 id="col-done">Done <span class="column-count" data-count>0</span></h2>
+        <div class="column-cards" data-cards></div>
+      </section>
+    </div>
   </main>
+  <script src="{{ url_for('static', filename='js/logout.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/board_grouping.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/board.js') }}"></script>
 </body>
 </html>

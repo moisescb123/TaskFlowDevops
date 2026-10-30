@@ -1,0 +1,22 @@
+# Render Blueprint — TaskFlow DevOps demo (US15).
+# Connect this repo in Render Dashboard → New → Blueprint.
+# Set SECRET_KEY (and optional DATABASE_PATH) in the service Environment.
+# After the service exists, copy its Deploy Hook into GitHub secret RENDER_DEPLOY_HOOK.
+
+services:
+  - type: web
+    name: taskflow-devops
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT wsgi:app
+    healthCheckPath: /login
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_PATH
+        value: taskflow.db
