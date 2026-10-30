@@ -116,9 +116,25 @@ pip install -r requirements.txt
 pytest
 ```
 
-### Related (later stories)
+## Continuous delivery (US15)
 
-- Deploy only after successful verification (US15).
+After **CI** succeeds on `main`, the **CD** workflow deploys to **Render** (Flask + gunicorn). Failing CI does not deploy (RN03).
+
+| Item | Value |
+|------|--------|
+| Workflow | `.github/workflows/cd.yml` |
+| Trigger | `workflow_run` of **CI** with `conclusion == success` on branch `main` only (no manual dispatch) |
+| Host | Render Blueprint `render.yaml` |
+| Start | `gunicorn --bind 0.0.0.0:$PORT wsgi:app` |
+| Secret | GitHub Actions `RENDER_DEPLOY_HOOK` (Deploy Hook URL — never commit) |
+| Ops guide | [`docs/continuous-delivery.md`](continuous-delivery.md) |
+
+### Developer steps
+
+1. Merge to `main` only with a green **Pytest** check (US14).
+2. Wait for **CI** on `main`, then **CD** / **Deploy**.
+3. Open the Render service URL (`/login`).
+4. Admins: configure Render + `RENDER_DEPLOY_HOOK` per `docs/continuous-delivery.md`.
 
 ## Branch protection (US14)
 
