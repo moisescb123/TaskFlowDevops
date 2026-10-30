@@ -21,11 +21,12 @@ This project uses **Render** (Python web service):
    - `SECRET_KEY` — strong random value (required)
    - `FLASK_ENV=production` (optional; Blueprint sets it)
    - `DATABASE_PATH=taskflow.db` (SQLite on the instance; ephemeral on free tier)
-4. Open the service → **Settings** → **Deploy Hook** → copy the URL.
-5. In GitHub: **Settings** → **Secrets and variables** → **Actions** → New repository secret:
+4. On first boot the app seeds demo users (`admin@` / `dev@` / `viewer@taskflow.local`) if missing.
+5. Open the service → **Settings** → **Deploy Hook** → copy the URL.
+6. In GitHub: **Settings** → **Secrets and variables** → **Actions** → New repository secret:
    - Name: `RENDER_DEPLOY_HOOK`
    - Value: the Deploy Hook URL
-6. Smoke: merge a trivial change to `main` (or re-run **CI** on `main`) so CD runs after green **CI**. There is no manual CD dispatch — that would bypass RN03.
+7. Smoke: merge a trivial change to `main` (or re-run **CI** on `main`) so CD runs after green **CI**. There is no manual CD dispatch — that would bypass RN03.
 
 ## Developer flow
 

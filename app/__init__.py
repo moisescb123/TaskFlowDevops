@@ -38,5 +38,10 @@ def create_app(config_object: type = Config) -> Flask:
 
     with app.app_context():
         init_db()
+        # Demo users for local and hosted demos (idempotent; US01/US03/US15).
+        if not app.config.get("TESTING"):
+            from app.services.auth_service import seed_demo_users
+
+            seed_demo_users()
 
     return app
