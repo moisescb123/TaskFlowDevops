@@ -23,290 +23,295 @@ Reglas de negocio: un solo asignado (RN01); título, fecha límite y prioridad o
 
 ## Diseño y modelado del sistema
 
-TaskFlow es una aplicación web monolítica: el navegador habla con un solo proceso Flask, que persiste usuarios y tareas en SQLite y se publica en Render solo después de que CI pase en `main`.
+Los modelos siguen la semana 5: contexto, casos de uso, clases, secuencia, actividad, estados y flujo de datos. Cada uno muestra una vista del mismo sistema y omite el resto.
 
-### Arquitectura de contexto
+TaskFlow es una aplicación web: el navegador habla con un proceso Flask y las tareas quedan en SQLite. GitHub Actions y Render están fuera de la frontera del producto; verifican y publican el sistema.
 
-Actores y sistemas externos. El tablero no depende de otros servicios de negocio; GitHub y Render cubren verificación y publicación.
+### Modelo de contexto
+
+Muestra el sistema en su entorno y marca la frontera con actores y sistemas externos.
 
 ```mermaid
 flowchart LR
-  admin[Admin]
-  developer[Developer]
-  viewer[Viewer]
-  app[TaskFlow DevOps]
+  admin[Administrador]
+  dev[Desarrollador]
+  vis[Visualizador]
   gh[GitHub Actions]
   render[Render]
+  sys[TaskFlow DevOps]
 
-  admin -->|gestiona usuarios| app
-  developer -->|crea y mueve tareas| app
-  viewer -->|consulta el tablero| app
-  gh -->|Pytest en cada push y PR| app
-  gh -->|hook solo si CI en main es verde| render
-  render -->|sirve la demo| app
+  admin --- sys
+  dev --- sys
+  vis --- sys
+  gh --- sys
+  render --- sys
 ```
 
-### Arquitectura lógica
+| Elemento externo | Relación con el sistema |
+|------------------|-------------------------|
+| Administrador, Desarrollador, Visualizador | Usan el tablero según su rol |
+| GitHub Actions | Ejecuta Pytest y, si `main` queda verde, pide el despliegue |
+| Render | Publica la demo; no participa en las reglas del tablero |
 
-Cuatro capas dentro del mismo proceso. Las páginas HTML no acceden a la base: el JavaScript del tablero llama a la API JSON.
+### Diagrama de casos de uso
+
+Los actores son roles externos. La elipse es una función que el usuario percibe. La línea continua es la interacción del actor. `<<include>>` es una función que el caso siempre utiliza. `<<extend>>` es un comportamiento opcional: el asignado no es obligatorio al crear o editar.
 
 ```mermaid
-flowchart TB
-  subgraph cliente [Cliente]
-    pages[Paginas HTML<br/>login, tablero, usuarios]
-    js[JavaScript del tablero]
-  end
+flowchart LR
+  admin((Administrador))
+  dev((Desarrollador))
+  vis((Visualizador))
 
-  subgraph aplicacion [Aplicacion Flask]
-    routes[Rutas<br/>pages, auth, users, tasks]
-    authz[Sesion y autorizacion por rol]
-    services[Servicios<br/>auth, usuarios, tareas]
-    models[Modelos User y Task]
-  end
+  login([Iniciar sesión])
+  logout([Cerrar sesión])
+  board([Consultar tablero])
+  create([Crear tarea])
+  edit([Editar tarea])
+  remove([Eliminar tarea])
+  status([Cambiar estado])
+  assign([Asignar responsable])
+  register([Registrar usuario])
 
-  db[(SQLite<br/>users y tasks)]
+  admin --- login
+  admin --- logout
+  admin --- board
+  admin --- register
+  dev --- login
+  dev --- logout
+  dev --- board
+  dev --- create
+  dev --- edit
+  dev --- remove
+  dev --- status
+  vis --- login
+  vis --- logout
+  vis --- board
 
-  pages --> routes
-  js -->|JSON /api| routes
-  routes --> authz
-  authz --> services
-  services --> models
-  models --> db
+  logout -.->|include| login
+  board -.->|include| login
+  create -.->|include| login
+  edit -.->|include| login
+  remove -.->|include| login
+  status -.->|include| login
+  register -.->|include| login
+  create -.->|extend| assign
+  edit -.->|extend| assign
 ```
 
-| Capa | Responsabilidad | Ubicación |
-|------|-----------------|-----------|
-| Presentación | Login, tablero Kanban y pantalla de usuarios | `templates/`, `static/` |
-| API y páginas | HTTP, códigos de estado y redirecciones | `app/routes/` |
-| Autorización | Cookie de sesión firmada; decoradores por rol | `app/auth/`, `app/services/auth_service.py` |
-| Dominio | Validación RN01–RN04 y casos de uso | `app/services/`, `app/models/` |
-| Persistencia | Tablas `users` y `tasks`, claves foráneas | `app/db.py` |
+### Diagrama de clases
 
-Puntos de entrada: en local, `flask --app app run`; en producción, Gunicorn carga `wsgi:app`, que llama a `create_app()`.
+Estructura estática del negocio. Los atributos van con visibilidad privada, como en el ejemplo de la materia. Las multiplicidades van en los extremos de la asociación.
 
-### Flujo de una petición
-
-Ejemplo: un Developer mueve una tarea de To Do a In progress.
+`Usuario` y `Tarea` corresponden a `User` y `Task`. El ejemplo de clase de la materia usa generalización (Persona y Personal). Aquí no hay subclases: Administrador, Desarrollador y Visualizador comparten los mismos datos y se distinguen por el atributo `rol`.
 
 ```mermaid
-sequenceDiagram
-  actor Dev as Developer
-  participant UI as Tablero
-  participant API as PATCH /api/tasks/id/status
-  participant Svc as task_service
-  participant DB as SQLite
-
-  Dev->>UI: Cambia el estado
-  UI->>API: Cookie de sesion y nuevo estado
-  API->>API: Exige rol developer
-  API->>Svc: Valida la transicion RN04
-  Svc->>DB: Actualiza tasks.status
-  DB-->>UI: Tarea en in_progress
-```
-
-Admin y Viewer que llamen a un endpoint de escritura reciben `403`. Sin sesión, las páginas protegidas redirigen a `/login`.
-
-### Modelo de dominio
-
-Dos entidades persistidas. El tablero no es una tabla: es la vista que agrupa tareas por `status`.
-
-```mermaid
-erDiagram
-  USER ||--o{ TASK : "assignee_id"
-  USER ||--o{ TASK : "created_by_id"
-  USER {
-    int id PK
-    string email UK
-    string password_hash
-    string full_name
-    string role
-    datetime created_at
+classDiagram
+  class Usuario {
+    -id
+    -correo
+    -hashContrasena
+    -nombreCompleto
+    -rol
   }
-  TASK {
-    int id PK
-    string title
-    string status
-    string priority
-    date due_date
-    int assignee_id FK
-    int created_by_id FK
-    datetime created_at
-    datetime updated_at
+  class Tarea {
+    -id
+    -titulo
+    -estado
+    -prioridad
+    -fechaLimite
+    -idAsignado
+    -idCreador
   }
+
+  Usuario "1" --> "*" Tarea : crea
+  Usuario "0..1" --> "*" Tarea : asignado
 ```
 
 | Concepto | Valores | Regla |
 |----------|---------|--------|
-| Rol | `admin`, `developer`, `viewer` | Define qué pantallas y endpoints puede usar |
+| Rol | `admin`, `developer`, `viewer` | Define qué casos de uso puede iniciar |
 | Estado | `todo`, `in_progress`, `done` | Columna del tablero |
 | Prioridad | `high`, `medium`, `low` | Obligatoria (RN02) |
-| Asignado | como máximo un `assignee_id` | RN01 |
-| Sesión | cookie firmada con `SECRET_KEY` | No se guarda en SQLite |
+| Asignado | como máximo un usuario | RN01 |
+| Sesión | cookie firmada con `SECRET_KEY` | No es una clase persistida |
 
 Detalle de campos y contratos: [`docs/data-model.md`](docs/data-model.md) y [`docs/api-spec.yml`](docs/api-spec.yml).
 
-### Diagrama de clases
+### Diagrama de secuencia
 
-El rol no es una subclase: vive en `User.role`. `Task` conoce a su creador y, como máximo, a un asignado. Los servicios aplican las reglas de negocio; las rutas HTTP solo delegan.
+Agrega el detalle del caso de uso **Cambiar estado**: los objetos que participan y el orden de los mensajes. La respuesta vuelve con línea discontinua.
 
 ```mermaid
-classDiagram
-  class User {
-    +int id
-    +string email
-    +string passwordHash
-    +string fullName
-    +string role
-    +toPublicDict() dict
-  }
-  class Task {
-    +int id
-    +string title
-    +string status
-    +string priority
-    +string dueDate
-    +int assigneeId
-    +int createdById
-    +string createdAt
-    +string updatedAt
-    +toPublicDict() dict
-  }
-  class AuthService {
-    +authenticate(email, password) User
-    +establishSession(user) void
-    +clearSession() void
-    +currentUser() User
-  }
-  class UserService {
-    +registerUser(payload) User
-    +listPublicUsers() list
-  }
-  class TaskService {
-    +getTasksForBoard() list
-    +createTaskFromPayload(payload, createdById) dict
-    +updateTaskFromPayload(taskId, payload) dict
-    +changeTaskStatus(taskId, status) dict
-    +removeTask(taskId) void
-  }
+sequenceDiagram
+  actor Dev as Desarrollador
+  participant UI as Interfaz
+  participant Gestor as GestorTareas
+  participant DB as Base de datos
 
-  User "1" --> "0..*" Task : createdBy
-  User "0..1" --> "0..*" Task : assignee
-  AuthService --> User : autentica
-  UserService --> User : registra
-  TaskService --> Task : persiste
-  TaskService --> User : valida asignado
+  Dev->>UI: 1. cambiarEstado(id, estado)
+  UI->>Gestor: 2. cambiarEstado(id, estado)
+  Gestor->>DB: 3. leerTarea(id)
+  DB-->>Gestor: 4. tarea
+  Gestor->>Gestor: 5. validarTransicion
+  Gestor->>DB: 6. actualizarEstado(id, estado)
+  DB-->>Gestor: 7. tareaActualizada
+  Gestor-->>UI: 8. tarea
+  UI-->>Dev: 9. mostrarTablero
 ```
 
-| Clase | Dónde vive | Qué decide |
-|-------|------------|------------|
-| `User`, `Task` | `app/models/` | Forma de los datos y mapeo a SQLite |
-| `AuthService` | `app/services/auth_service.py` | Credenciales y cookie de sesión |
-| `UserService` | `app/services/user_service.py` | Alta de usuarios (solo Admin) |
-| `TaskService` | `app/services/task_service.py` | RN01, RN02 y RN04 |
+Si el actor no es Desarrollador, `GestorTareas` corta la secuencia y la interfaz muestra el rechazo. Si el salto es de Por hacer a Terminada, el mensaje 5 no llega al mensaje 6.
 
 ### Diagramas de actividad
 
-#### Inicio de sesión
+Cada nodo es una acción en verbo. El rombo no lleva la pregunta dentro: la guarda va en la flecha, entre corchetes. El círculo negro es el inicio y el doble círculo es el fin.
+
+#### Iniciar sesión
 
 ```mermaid
 flowchart TD
-  inicio([Inicio]) --> form[Ingresar correo y contraseña]
-  form --> formato{Formato válido?}
-  formato -->|No| e400[Responder 400]
-  formato -->|Sí| cred{Usuario y contraseña correctos?}
-  cred -->|No| e401[Responder 401]
-  cred -->|Sí| sesion[Guardar user_id y role en la sesión]
-  sesion --> rol{Rol}
-  rol -->|admin| admin[Abrir gestión de usuarios]
-  rol -->|developer o viewer| board[Abrir tablero]
-  e400 --> fin([Fin])
-  e401 --> fin
-  admin --> fin
-  board --> fin
+  inicio((inicio)) --> autenticar[Autenticar usuario]
+  autenticar --> decisionAut{ }
+  decisionAut -->|aut = OK| acceso[Acceder a la aplicacion]
+  decisionAut -->|aut distinto de OK| error[Mostrar error]
+  acceso --> interfaz[Mostrar interfaz segun el rol]
+  error --> fin(((fin)))
+  interfaz --> fin
 ```
 
-#### Alta de una tarea
-
-Solo el Developer llega a crear. La tarea nace en `todo`.
+#### Registrar usuario
 
 ```mermaid
 flowchart TD
-  inicio([Inicio]) --> sesion{Sesión de developer?}
-  sesion -->|No autenticado| e401[Responder 401]
-  sesion -->|Admin o Viewer| e403[Responder 403]
-  sesion -->|Developer| datos[Enviar título, prioridad, fecha y asignado opcional]
-  datos --> valid{RN02 y RN01 válidos?}
-  valid -->|No| e400[Responder 400]
-  valid -->|Sí| guardar[Insertar tarea con estado todo]
-  guardar --> ok[Devolver la tarea y mostrarla en To Do]
-  e401 --> fin([Fin])
-  e403 --> fin
-  e400 --> fin
-  ok --> fin
+  inicio((inicio)) --> rol{ }
+  rol -->|rol = admin| datos[Anadir informacion de registro]
+  rol -->|rol distinto de admin| denegado[Mostrar acceso denegado]
+  datos --> valid{ }
+  valid -->|datosValidos y usuarioExiste = false| guardar[Guardar usuario]
+  valid -->|datos invalidos o usuarioExiste = true| error[Mostrar error]
+  guardar --> fin(((fin)))
+  denegado --> fin
+  error --> fin
 ```
 
-#### Cambio de estado
+#### Crear tarea
 
 ```mermaid
 flowchart TD
-  inicio([Inicio]) --> sesion{Sesión de developer?}
-  sesion -->|No| denegado[Responder 401 o 403]
-  sesion -->|Sí| existe{La tarea existe?}
-  existe -->|No| e404[Responder 404]
-  existe -->|Sí| salto{Transición permitida?}
-  salto -->|todo a done| e400[Rechazar por RN04]
-  salto -->|Sí| actualizar[Actualizar status y updated_at]
-  actualizar --> ok[Mover la tarjeta de columna]
-  denegado --> fin([Fin])
-  e404 --> fin
-  e400 --> fin
-  ok --> fin
+  inicio((inicio)) --> rol{ }
+  rol -->|rol = developer| datos[Anadir titulo, prioridad y fecha limite]
+  rol -->|rol distinto de developer| denegado[Mostrar acceso denegado]
+  datos --> valid{ }
+  valid -->|datosValidos| guardar[Guardar tarea en Por hacer]
+  valid -->|datos invalidos| error[Mostrar error]
+  guardar --> tablero[Mostrar tarea en el tablero]
+  denegado --> fin(((fin)))
+  error --> fin
+  tablero --> fin
 ```
 
-#### Registro de usuario
+#### Cambiar estado
 
 ```mermaid
 flowchart TD
-  inicio([Inicio]) --> sesion{Sesión de admin?}
-  sesion -->|No| denegado[Responder 401 o 403]
-  sesion -->|Sí| datos[Enviar correo, contraseña, nombre y rol]
-  datos --> valid{Datos válidos y correo libre?}
-  valid -->|No| e400[Responder 400]
-  valid -->|Sí| hash[Guardar password_hash y el rol]
-  hash --> ok[Devolver el usuario sin la contraseña]
-  denegado --> fin([Fin])
-  e400 --> fin
-  ok --> fin
+  inicio((inicio)) --> rol{ }
+  rol -->|rol = developer| leer[Leer tarea]
+  rol -->|rol distinto de developer| denegado[Mostrar acceso denegado]
+  leer --> existe{ }
+  existe -->|tareaExiste = false| noExiste[Mostrar tarea inexistente]
+  existe -->|tareaExiste = true| transicion{ }
+  transicion -->|transicionValida| actualizar[Actualizar estado]
+  transicion -->|salto de Por hacer a Terminada| rechazar[Rechazar transicion]
+  actualizar --> mover[Mover tarjeta de columna]
+  denegado --> fin(((fin)))
+  noExiste --> fin
+  rechazar --> fin
+  mover --> fin
 ```
 
-### Modelo de estados de una tarea
+### Diagrama de estados
 
-Una tarea nueva nace en `todo`. Se puede retroceder; no se puede saltar de To Do a Done (RN04).
+Modelo de comportamiento de la tarea. Una tarea nueva entra en Por hacer. Puede retroceder. El salto directo a Terminada no es una transición del modelo.
 
 ```mermaid
 stateDiagram-v2
-  [*] --> todo: alta
-  todo --> in_progress: iniciar
-  in_progress --> done: terminar
-  done --> in_progress: reabrir
-  in_progress --> todo: devolver
+  [*] --> PorHacer: crear
+  PorHacer --> EnProgreso: iniciar
+  EnProgreso --> Terminada: terminar
+  Terminada --> EnProgreso: reabrir
+  EnProgreso --> PorHacer: devolver
 ```
 
-El salto `todo` → `done` no forma parte del modelo: el servicio lo rechaza.
+En la base de datos esos estados se guardan como `todo`, `in_progress` y `done`.
 
-### Arquitectura de despliegue
+### Diagrama de flujo de datos
 
-`main` está protegida: el merge exige el check **Pytest**. El workflow de CD no tiene disparo manual; solo corre si ese CI terminó en éxito y la rama es `main`.
+Muestra qué datos circulan, sin el detalle de la lógica. El nivel 0 es el sistema completo. El nivel 1 abre los procesos y los almacenes.
+
+#### Nivel 0
 
 ```mermaid
 flowchart LR
-  pr[Pull request] --> ci[GitHub Actions CI<br/>Pytest]
-  ci -->|check obligatorio| main[rama main]
+  admin[Administrador]
+  dev[Desarrollador]
+  vis[Visualizador]
+  p0((0 TaskFlow))
+
+  admin -->|datos de usuario| p0
+  p0 -->|listado de usuarios| admin
+  dev -->|credenciales y datos de tarea| p0
+  p0 -->|tablero| dev
+  vis -->|credenciales| p0
+  p0 -->|tablero| vis
+```
+
+#### Nivel 1
+
+```mermaid
+flowchart LR
+  admin[Administrador]
+  dev[Desarrollador]
+  vis[Visualizador]
+  p1((1 Autenticar))
+  p2((2 Gestionar usuarios))
+  p3((3 Gestionar tareas))
+  d1[(D1 Usuarios)]
+  d2[(D2 Tareas)]
+
+  admin -->|credenciales| p1
+  dev -->|credenciales| p1
+  vis -->|credenciales| p1
+  p1 -->|consulta de usuario| d1
+  d1 -->|usuario| p1
+  p1 -->|sesion| admin
+  p1 -->|sesion| dev
+  p1 -->|sesion| vis
+
+  admin -->|datos de usuario| p2
+  p2 -->|usuario| d1
+  d1 -->|listado| p2
+  p2 -->|listado de usuarios| admin
+
+  dev -->|datos de tarea| p3
+  p3 -->|tarea| d2
+  d2 -->|tareas| p3
+  p3 -->|tablero| dev
+  p3 -->|tablero| vis
+```
+
+### Publicación del sistema
+
+Este flujo no sustituye a los modelos anteriores. Describe el entorno DevOps: `main` exige el check Pytest y el despliegue solo ocurre si ese CI terminó en éxito.
+
+```mermaid
+flowchart LR
+  pr[Pull request] --> ci[GitHub Actions CI]
+  ci -->|Pytest en verde| main[rama main]
   main --> ci2[CI en main]
-  ci2 -->|conclusion success| cd[Workflow CD]
-  cd -->|POST RENDER_DEPLOY_HOOK| render[Render web service]
-  render --> gunicorn[Gunicorn wsgi:app]
-  gunicorn --> sqlite[(taskflow.db)]
+  ci2 -->|CI exitoso| cd[Disparar despliegue]
+  cd --> render[Render]
+  render --> app[Aplicacion publicada]
+  app --> db[(SQLite)]
 ```
 
 | Pieza | Rol |
@@ -314,7 +319,7 @@ flowchart LR
 | `.github/workflows/ci.yml` | Instala dependencias y ejecuta Pytest en push y pull request |
 | Protección de `main` | Impide el merge sin el check Pytest (RN03) |
 | `.github/workflows/cd.yml` | Dispara el deploy hook de Render |
-| `render.yaml` | Servicio Python free: build con pip, arranque con Gunicorn, health check en `/login` |
+| `render.yaml` | Servicio Python: build con pip, arranque con Gunicorn, health check en `/login` |
 | `SECRET_KEY` | Variable de entorno en Render; la app no arranca en producción con el valor de desarrollo |
 
 ## Inicio rápido (local)
