@@ -55,48 +55,53 @@ flowchart LR
 
 ### Diagrama de casos de uso
 
-Los actores son roles externos. La elipse es una función que el usuario percibe. La línea continua es la interacción del actor. `<<include>>` es una función que el caso siempre utiliza. `<<extend>>` es un comportamiento opcional: el asignado no es obligatorio al crear o editar.
+Los actores son roles externos que interactúan con el sistema según sus permisos. La elipse representa una función que el usuario puede realizar y la línea continua representa la interacción entre el actor y el caso de uso. La relación `<<extend>>` representa un comportamiento opcional. En este caso, asignar un responsable es opcional al crear o editar una tarea. Para acceder a las funciones protegidas, el usuario debe haber iniciado sesión previamente.
+
 
 ```mermaid
 flowchart LR
-  admin((Administrador))
-  dev((Desarrollador))
-  vis((Visualizador))
+    admin((Administrador))
+    dev((Desarrollador))
+    vis((Visualizador))
 
-  login([Iniciar sesión])
-  logout([Cerrar sesión])
-  board([Consultar tablero])
-  create([Crear tarea])
-  edit([Editar tarea])
-  remove([Eliminar tarea])
-  status([Cambiar estado])
-  assign([Asignar responsable])
-  register([Registrar usuario])
+    login([Iniciar sesión])
+    logout([Cerrar sesión])
+    board([Consultar tablero])
+    create([Crear tarea])
+    edit([Editar tarea])
+    remove([Eliminar tarea])
+    status([Cambiar estado])
+    assign([Asignar responsable])
+    register([Registrar usuario])
 
-  admin --- login
-  admin --- logout
-  admin --- board
-  admin --- register
-  dev --- login
-  dev --- logout
-  dev --- board
-  dev --- create
-  dev --- edit
-  dev --- remove
-  dev --- status
-  vis --- login
-  vis --- logout
-  vis --- board
+    admin --- login
+    admin --- logout
+    admin --- board
+    admin --- register
 
-  logout -.->|include| login
-  board -.->|include| login
-  create -.->|include| login
-  edit -.->|include| login
-  remove -.->|include| login
-  status -.->|include| login
-  register -.->|include| login
-  create -.->|extend| assign
-  edit -.->|extend| assign
+    dev --- login
+    dev --- logout
+    dev --- board
+    dev --- create
+    dev --- edit
+    dev --- remove
+    dev --- status
+
+    vis --- login
+    vis --- logout
+    vis --- board
+
+    assign -.->|extend| create
+    assign -.->|extend| edit
+
+    note["Precondición: para acceder a las funciones protegidas, el usuario debe iniciar sesión previamente. Los permisos dependen de su rol."]
+
+    note --- board
+    note --- create
+    note --- edit
+    note --- remove
+    note --- status
+    note --- register
 ```
 
 ### Diagrama de clases
